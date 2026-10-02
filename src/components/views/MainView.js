@@ -915,12 +915,6 @@ export class MainView extends LitElement {
 
     _renderStartButton() {
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-
-        const cmdIcon = html`<svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-    _renderStartButton() {
-        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
         const shortcutKey = isMac ? 'Cmd+O' : 'Ctrl+O';
         const homeShortcut = isMac ? 'Cmd+H' : 'Ctrl+H';
 
