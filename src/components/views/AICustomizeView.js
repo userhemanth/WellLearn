@@ -1,4 +1,4 @@
-import { html, css, LitElement } from '../../assets/lit-core-2.7.4.min.js';
+﻿import { html, css, LitElement } from '../../assets/lit-core-2.7.4.min.js';
 import { unifiedPageStyles } from './sharedPageStyles.js';
 
 export class AICustomizeView extends LitElement {
@@ -51,7 +51,7 @@ export class AICustomizeView extends LitElement {
 
     async _loadFromStorage() {
         try {
-            const prefs = await cheatingDaddy.storage.getPreferences();
+            const prefs = await wellLearn.storage.getPreferences();
             this._context = prefs.customPrompt || '';
             this.requestUpdate();
         } catch (error) {
@@ -65,7 +65,7 @@ export class AICustomizeView extends LitElement {
 
     async _saveContext(val) {
         this._context = val;
-        await cheatingDaddy.storage.updatePreference('customPrompt', val);
+        await wellLearn.storage.updatePreference('customPrompt', val);
     }
 
     _getProfileName(profile) {

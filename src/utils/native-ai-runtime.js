@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+﻿const crypto = require('crypto');
 const fs = require('fs');
 const net = require('net');
 const path = require('path');
@@ -7,7 +7,7 @@ const { Readable, Transform } = require('stream');
 const { pipeline } = require('stream/promises');
 const { getConfigDir } = require('../storage');
 
-const RELEASE_BASE_URL = 'https://github.com/sohzm/cheating-daddy/releases/download/v0.7.0';
+const RELEASE_BASE_URL = 'https://github.com/sohzm/welllearn/releases/download/v0.7.0';
 
 const BINARY_RELEASES = {
     darwin: {

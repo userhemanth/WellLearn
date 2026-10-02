@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 
 // Convert raw PCM to WAV format for easier playback and verification
@@ -86,7 +86,7 @@ function analyzeAudioBuffer(buffer, label = 'Audio') {
 // Save audio buffer with metadata for debugging
 function saveDebugAudio(buffer, type, timestamp = Date.now()) {
     const homeDir = require('os').homedir();
-    const debugDir = path.join(homeDir, 'cheating-daddy-debug');
+    const debugDir = path.join(homeDir, 'welllearn-debug');
 
     if (!fs.existsSync(debugDir)) {
         fs.mkdirSync(debugDir, { recursive: true });

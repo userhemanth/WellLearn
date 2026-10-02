@@ -1,4 +1,4 @@
-import { html, css, LitElement } from '../../assets/lit-core-2.7.4.min.js';
+﻿import { html, css, LitElement } from '../../assets/lit-core-2.7.4.min.js';
 
 const LOCAL_LLM_PRESETS = [
     { value: 'unsloth/Qwen3.5-0.8B-GGUF:Q4_K_M', label: 'Qwen 3.5 0.8B Q4 — 0.74 GB · Fastest' },
@@ -750,22 +750,22 @@ export class MainView extends LitElement {
     async _loadFromStorage() {
         try {
             const [config, prefs, creds] = await Promise.all([
-                cheatingDaddy.storage.getConfig(),
-                cheatingDaddy.storage.getPreferences(),
-                cheatingDaddy.storage.getCredentials().catch(() => ({})),
+                wellLearn.storage.getConfig(),
+                wellLearn.storage.getPreferences(),
+                wellLearn.storage.getCredentials().catch(() => ({})),
             ]);
 
             const storedMode = prefs.providerMode || 'byok';
             this._mode = storedMode === 'cloud' ? 'byok' : storedMode;
 
             if (storedMode === 'cloud') {
-                await cheatingDaddy.storage.updatePreference('providerMode', this._mode);
+                await wellLearn.storage.updatePreference('providerMode', this._mode);
             }
 
             // Load keys
             this._token = creds.cloudToken || '';
-            this._geminiKey = (await cheatingDaddy.storage.getApiKey().catch(() => '')) || '';
-            this._groqKey = (await cheatingDaddy.storage.getGroqApiKey().catch(() => '')) || '';
+            this._geminiKey = (await wellLearn.storage.getApiKey().catch(() => '')) || '';
+            this._groqKey = (await wellLearn.storage.getGroqApiKey().catch(() => '')) || '';
             this._openaiKey = creds.openaiKey || '';
             this._geminiLiveModel = config.geminiLiveModel || 'gemini-3.1-flash-live-preview';
             this._groqModel = config.groqModel || 'qwen/qwen3.6-27b';
@@ -918,7 +918,7 @@ export class MainView extends LitElement {
         this._mode = mode;
         this._tokenError = false;
         this._keyError = false;
-        await cheatingDaddy.storage.updatePreference('providerMode', mode);
+        await wellLearn.storage.updatePreference('providerMode', mode);
         this.requestUpdate();
     }
 
@@ -926,8 +926,8 @@ export class MainView extends LitElement {
         this._token = val;
         this._tokenError = false;
         try {
-            const creds = await cheatingDaddy.storage.getCredentials().catch(() => ({}));
-            await cheatingDaddy.storage.setCredentials({ ...creds, cloudToken: val });
+            const creds = await wellLearn.storage.getCredentials().catch(() => ({}));
+            await wellLearn.storage.setCredentials({ ...creds, cloudToken: val });
         } catch (e) {}
         this.requestUpdate();
     }
@@ -935,52 +935,52 @@ export class MainView extends LitElement {
     async _saveGeminiKey(val) {
         this._geminiKey = val;
         this._keyError = false;
-        await cheatingDaddy.storage.setApiKey(val);
+        await wellLearn.storage.setApiKey(val);
         this.requestUpdate();
     }
 
     async _saveGroqKey(val) {
         this._groqKey = val;
-        await cheatingDaddy.storage.setGroqApiKey(val);
+        await wellLearn.storage.setGroqApiKey(val);
         this.requestUpdate();
     }
 
     async _saveGeminiLiveModel(val) {
         this._geminiLiveModel = val;
-        await cheatingDaddy.storage.updateConfig('geminiLiveModel', val);
+        await wellLearn.storage.updateConfig('geminiLiveModel', val);
         this.requestUpdate();
     }
 
     async _saveGroqModel(val) {
         this._groqModel = val;
-        await cheatingDaddy.storage.updateConfig('groqModel', val);
+        await wellLearn.storage.updateConfig('groqModel', val);
         this.requestUpdate();
     }
 
     async _saveGroqImageModel(val) {
         this._groqImageModel = val;
-        await cheatingDaddy.storage.updateConfig('groqImageModel', val);
+        await wellLearn.storage.updateConfig('groqImageModel', val);
         this.requestUpdate();
     }
 
     async _saveDisableGroqThinking(disabled) {
         this._disableGroqThinking = disabled;
-        await cheatingDaddy.storage.updateConfig('disableGroqThinking', disabled);
+        await wellLearn.storage.updateConfig('disableGroqThinking', disabled);
         this.requestUpdate();
     }
 
     async _saveOpenaiKey(val) {
         this._openaiKey = val;
         try {
-            const creds = await cheatingDaddy.storage.getCredentials().catch(() => ({}));
-            await cheatingDaddy.storage.setCredentials({ ...creds, openaiKey: val });
+            const creds = await wellLearn.storage.getCredentials().catch(() => ({}));
+            await wellLearn.storage.setCredentials({ ...creds, openaiKey: val });
         } catch (e) {}
         this.requestUpdate();
     }
 
     async _saveLocalLlmModel(val) {
         this._localLlmModel = val;
-        await cheatingDaddy.storage.updatePreference('localLlmModel', val);
+        await wellLearn.storage.updatePreference('localLlmModel', val);
         this.requestUpdate();
     }
 
@@ -997,7 +997,7 @@ export class MainView extends LitElement {
 
     async _saveWhisperModel(val) {
         this._whisperModel = val;
-        await cheatingDaddy.storage.updatePreference('whisperModel', val);
+        await wellLearn.storage.updatePreference('whisperModel', val);
         this.requestUpdate();
     }
 
@@ -1335,11 +1335,11 @@ export class MainView extends LitElement {
                     this._mode === 'local'
                         ? html`
                               <div class="title-row">
-                                  <div class="page-title">Cheating Daddy <span class="mode-suffix">Local AI</span></div>
+                                  <div class="page-title">WellLearn <span class="mode-suffix">Local AI</span></div>
                                   <button class="help-btn" @click=${this._openLocalHelp} aria-label="Open Local AI help">${helpIcon}</button>
                               </div>
                           `
-                        : html` <div class="page-title">${html`Cheating Daddy <span class="mode-suffix">BYOK</span>`}</div> `
+                        : html` <div class="page-title">${html`WellLearn <span class="mode-suffix">BYOK</span>`}</div> `
                 }
                 <div class="page-subtitle">${this._mode === 'byok' ? 'Bring your own API keys' : 'Run models locally on your machine'}</div>
 
@@ -1363,7 +1363,7 @@ export class MainView extends LitElement {
                         <div class="help-section">
                             <div class="help-section-title">Native local AI</div>
                             <div class="help-section-text">
-                                Cheating Daddy runs llama.cpp and whisper.cpp directly. Everything stays on your computer — no external AI service or
+                                WellLearn runs llama.cpp and whisper.cpp directly. Everything stays on your computer — no external AI service or
                                 Ollama installation is required.
                             </div>
                         </div>
@@ -1372,7 +1372,7 @@ export class MainView extends LitElement {
                             <div class="help-section-title">Automatic setup</div>
                             <div class="help-section-text">
                                 The correct native runners, selected Whisper model, and language model are downloaded and checksum-verified on first
-                                use. They are stored in the Cheating Daddy config directory.
+                                use. They are stored in the WellLearn config directory.
                             </div>
                         </div>
 

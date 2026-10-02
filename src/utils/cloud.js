@@ -1,4 +1,4 @@
-const WebSocket = require('ws');
+﻿const WebSocket = require('ws');
 const { BrowserWindow } = require('electron');
 
 let cloudWs = null;
@@ -31,7 +31,7 @@ function connectCloud(token, profile, userContext) {
     audioChunkCount = 0;
 
     return new Promise((resolve, reject) => {
-        const url = `wss://api.cheatingdaddy.com/ws?token=${encodeURIComponent(token)}`;
+        const url = `wss://api.welllearn.com/ws?token=${encodeURIComponent(token)}`;
         console.log('[Cloud] Connecting to', url);
 
         cloudWs = new WebSocket(url);

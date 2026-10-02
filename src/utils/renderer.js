@@ -1,4 +1,4 @@
-// renderer.js
+﻿// renderer.js
 const { ipcRenderer } = require('electron');
 
 let mediaStream = null;
@@ -146,9 +146,9 @@ async function initializeGemini(profile = 'interview', language = 'en-US') {
         const prefs = await storage.getPreferences();
         const success = await ipcRenderer.invoke('initialize-gemini', apiKey, prefs.customPrompt || '', profile, language);
         if (success) {
-            cheatingDaddy.setStatus('Live');
+            wellLearn.setStatus('Live');
         } else {
-            cheatingDaddy.setStatus('error');
+            wellLearn.setStatus('error');
         }
     }
 }
@@ -161,10 +161,10 @@ async function initializeLocal(profile = 'interview') {
 
     const success = await ipcRenderer.invoke('initialize-local', localLlmModel, whisperModel, profile, customPrompt);
     if (success) {
-        cheatingDaddy.setStatus('Local AI Live');
+        wellLearn.setStatus('Local AI Live');
         return true;
     } else {
-        cheatingDaddy.setStatus('error');
+        wellLearn.setStatus('error');
         return false;
     }
 }
@@ -177,17 +177,17 @@ async function initializeCloud(profile = 'interview') {
     const creds = await storage.getCredentials();
     const token = creds.cloudToken;
     if (!token || !token.trim()) {
-        cheatingDaddy.setStatus('error');
+        wellLearn.setStatus('error');
         return false;
     }
 
     const prefs = await storage.getPreferences();
     const success = await ipcRenderer.invoke('initialize-cloud', token, profile, prefs.customPrompt || '');
     if (success) {
-        cheatingDaddy.setStatus('Live');
+        wellLearn.setStatus('Live');
         return true;
     } else {
-        cheatingDaddy.setStatus('error');
+        wellLearn.setStatus('error');
         return false;
     }
 }
@@ -195,7 +195,7 @@ async function initializeCloud(profile = 'interview') {
 // Listen for status updates
 ipcRenderer.on('update-status', (event, status) => {
     console.log('Status update:', status);
-    cheatingDaddy.setStatus(status);
+    wellLearn.setStatus(status);
 });
 
 async function startCapture(screenshotIntervalSeconds = 5, imageQuality = 'medium') {
@@ -364,7 +364,7 @@ async function startCapture(screenshotIntervalSeconds = 5, imageQuality = 'mediu
         console.log('Manual mode enabled - screenshots will be captured on demand only');
     } catch (err) {
         console.error('Error starting capture:', err);
-        cheatingDaddy.setStatus('error');
+        wellLearn.setStatus('error');
     }
 }
 
@@ -651,7 +651,7 @@ async function captureManualScreenshot(imageQuality = null) {
                     // Response already displayed via streaming events (new-response/update-response)
                 } else {
                     console.error('Failed to get image response:', result.error);
-                    cheatingDaddy.addNewResponse(`Error: ${result.error}`);
+                    wellLearn.addNewResponse(`Error: ${result.error}`);
                 }
             };
             reader.readAsDataURL(blob);
@@ -774,11 +774,11 @@ ipcRenderer.on('clear-sensitive-data', async () => {
 
 // Handle shortcuts based on current view
 function handleShortcut(shortcutKey) {
-    const currentView = cheatingDaddy.getCurrentView();
+    const currentView = wellLearn.getCurrentView();
 
     if (shortcutKey === 'ctrl+enter' || shortcutKey === 'cmd+enter') {
         if (currentView === 'main') {
-            cheatingDaddy.element().handleStart();
+            wellLearn.element().handleStart();
         } else {
             captureManualScreenshot();
         }
@@ -786,7 +786,7 @@ function handleShortcut(shortcutKey) {
 }
 
 // Create reference to the main app element
-const cheatingDaddyApp = document.querySelector('cheating-daddy-app');
+const wellLearnApp = document.querySelector('welllearn-app');
 
 // ============ THEME SYSTEM ============
 const theme = {
@@ -1066,23 +1066,23 @@ const theme = {
     },
 };
 
-// Consolidated cheatingDaddy object - all functions in one place
-const cheatingDaddy = {
+// Consolidated wellLearn object - all functions in one place
+const wellLearn = {
     // App version
     getVersion: async () => ipcRenderer.invoke('get-app-version'),
 
     // Element access
-    element: () => cheatingDaddyApp,
-    e: () => cheatingDaddyApp,
+    element: () => wellLearnApp,
+    e: () => wellLearnApp,
 
     // App state functions - access properties directly from the app element
-    getCurrentView: () => cheatingDaddyApp.currentView,
-    getLayoutMode: () => cheatingDaddyApp.layoutMode,
+    getCurrentView: () => wellLearnApp.currentView,
+    getLayoutMode: () => wellLearnApp.layoutMode,
 
     // Status and response functions
-    setStatus: text => cheatingDaddyApp.setStatus(text),
-    addNewResponse: response => cheatingDaddyApp.addNewResponse(response),
-    updateCurrentResponse: response => cheatingDaddyApp.updateCurrentResponse(response),
+    setStatus: text => wellLearnApp.setStatus(text),
+    addNewResponse: response => wellLearnApp.addNewResponse(response),
+    updateCurrentResponse: response => wellLearnApp.updateCurrentResponse(response),
 
     // Core functionality
     initializeGemini,
@@ -1109,7 +1109,7 @@ const cheatingDaddy = {
 };
 
 // Make it globally available
-window.cheatingDaddy = cheatingDaddy;
+window.wellLearn = wellLearn;
 
 // Load theme after DOM is ready
 if (document.readyState === 'loading') {

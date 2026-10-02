@@ -1,5 +1,5 @@
-// Main app components
-export { CheatingDaddyApp } from './app/CheatingDaddyApp.js';
+﻿// Main app components
+export { WellLearnApp } from './app/WellLearnApp.js';
 export { AppHeader } from './app/AppHeader.js';
 
 // View components
