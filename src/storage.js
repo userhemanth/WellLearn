@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
@@ -10,36 +10,29 @@ const DEFAULT_CONFIG = {
     onboarded: false,
     layout: 'normal',
     geminiLiveModel: 'gemini-3.1-flash-live-preview',
-    groqModel: 'qwen/qwen3.6-27b',
-    groqImageModel: 'qwen/qwen3.6-27b',
-    disableGroqThinking: true,
 };
 
 const DEFAULT_CREDENTIALS = {
     apiKey: '',
-    groqApiKey: '',
 };
 
 const DEFAULT_PREFERENCES = {
     customPrompt: '',
-    providerMode: 'byok',
     selectedProfile: 'interview',
     selectedLanguage: 'en-US',
     selectedScreenshotInterval: '5',
     selectedImageQuality: 'medium',
     advancedMode: false,
-    audioMode: 'speaker_only',
+    audioMode: 'both',
     fontSize: 'medium',
     backgroundTransparency: 0.8,
     googleSearchEnabled: false,
-    localLlmModel: 'unsloth/Qwen3.5-4B-GGUF:Q4_K_M',
-    whisperModel: 'tiny.en',
 };
 
 const DEFAULT_KEYBINDS = null; // null means use system defaults
 
 const DEFAULT_LIMITS = {
-    data: [], // Array of { date: 'YYYY-MM-DD', flash: { count }, flashLite: { count }, groq: { 'qwen3-32b': { chars, limit }, 'gpt-oss-120b': { chars, limit }, 'gpt-oss-20b': { chars, limit } }, gemini: { 'gemma-4-26b-a4b-it': { chars } } }
+    data: [], // Array of { date: 'YYYY-MM-DD', flash: { count }, flashLite: { count }, gemini: { 'gemma-4-26b-a4b-it': { chars } } }
 };
 
 // Get the config directory path based on OS
@@ -201,14 +194,6 @@ function setApiKey(apiKey) {
     return setCredentials({ apiKey });
 }
 
-function getGroqApiKey() {
-    return getCredentials().groqApiKey || '';
-}
-
-function setGroqApiKey(groqApiKey) {
-    return setCredentials({ groqApiKey });
-}
-
 // ============ PREFERENCES ============
 
 function getPreferences() {
@@ -269,15 +254,6 @@ function getTodayLimits() {
     const todayEntry = limits.data.find(entry => entry.date === today);
 
     if (todayEntry) {
-        // ensure new fields exist
-        if (!todayEntry.groq) {
-            todayEntry.groq = {
-                'qwen3-32b': { chars: 0, limit: 1500000 },
-                'gpt-oss-120b': { chars: 0, limit: 600000 },
-                'gpt-oss-20b': { chars: 0, limit: 600000 },
-                'kimi-k2-instruct': { chars: 0, limit: 600000 },
-            };
-        }
         if (!todayEntry.gemini) {
             todayEntry.gemini = {
                 'gemma-4-26b-a4b-it': { chars: 0 },
@@ -293,12 +269,6 @@ function getTodayLimits() {
         date: today,
         flash: { count: 0 },
         flashLite: { count: 0 },
-        groq: {
-            'qwen3-32b': { chars: 0, limit: 1500000 },
-            'gpt-oss-120b': { chars: 0, limit: 600000 },
-            'gpt-oss-20b': { chars: 0, limit: 600000 },
-            'kimi-k2-instruct': { chars: 0, limit: 600000 },
-        },
         gemini: {
             'gemma-4-26b-a4b-it': { chars: 0 },
         },
@@ -368,24 +338,6 @@ function getAvailableModel() {
     }
 
     return 'gemini-2.5-flash'; // Default to flash for paid API users
-}
-
-function getModelForToday() {
-    const todayEntry = getTodayLimits();
-    const groq = todayEntry.groq;
-
-    if (groq['gpt-oss-120b'].chars < groq['gpt-oss-120b'].limit) {
-        return 'openai/gpt-oss-120b';
-    }
-    if (groq['gpt-oss-20b'].chars < groq['gpt-oss-20b'].limit) {
-        return 'openai/gpt-oss-20b';
-    }
-    if (groq['kimi-k2-instruct'].chars < groq['kimi-k2-instruct'].limit) {
-        return 'moonshotai/kimi-k2-instruct';
-    }
-
-    // All limits exhausted
-    return null;
 }
 
 // ============ HISTORY ============
@@ -511,8 +463,6 @@ module.exports = {
     setCredentials,
     getApiKey,
     setApiKey,
-    getGroqApiKey,
-    setGroqApiKey,
 
     // Preferences
     getPreferences,
@@ -530,7 +480,6 @@ module.exports = {
     incrementLimitCount,
     getAvailableModel,
     incrementCharUsage,
-    getModelForToday,
 
     // History
     saveSession,

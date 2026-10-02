@@ -1,17 +1,4 @@
-﻿import { html, css, LitElement } from '../../assets/lit-core-2.7.4.min.js';
-
-const LOCAL_LLM_PRESETS = [
-    { value: 'unsloth/Qwen3.5-0.8B-GGUF:Q4_K_M', label: 'Qwen 3.5 0.8B Q4 — 0.74 GB · Fastest' },
-    { value: 'unsloth/Qwen3.5-0.8B-GGUF:Q8_0', label: 'Qwen 3.5 0.8B Q8 — 1.02 GB' },
-    { value: 'unsloth/Qwen3.5-2B-GGUF:Q4_K_M', label: 'Qwen 3.5 2B Q4 — 1.95 GB' },
-    { value: 'unsloth/Qwen3.5-2B-GGUF:Q8_0', label: 'Qwen 3.5 2B Q8 — 2.68 GB' },
-    { value: 'unsloth/Qwen3.5-4B-GGUF:Q4_K_M', label: 'Qwen 3.5 4B Q4 — 3.42 GB · Recommended' },
-    { value: 'unsloth/Qwen3.5-4B-GGUF:Q8_0', label: 'Qwen 3.5 4B Q8 — 5.16 GB' },
-    { value: 'unsloth/Qwen3.5-9B-GGUF:Q4_K_M', label: 'Qwen 3.5 9B Q4 — 6.60 GB' },
-    { value: 'unsloth/Qwen3.5-9B-GGUF:Q8_0', label: 'Qwen 3.5 9B Q8 — 10.45 GB' },
-    { value: 'unsloth/Qwen3.5-27B-GGUF:Q4_K_M', label: 'Qwen 3.5 27B Q4 — 17.67 GB' },
-    { value: 'unsloth/Qwen3.5-35B-A3B-GGUF:Q4_K_M', label: 'Qwen 3.5 35B-A3B Q4 — 22.92 GB · Largest' },
-];
+import { html, css, LitElement } from '../../assets/lit-core-2.7.4.min.js';
 
 export class MainView extends LitElement {
     static styles = css`
@@ -689,26 +676,9 @@ export class MainView extends LitElement {
         selectedProfile: { type: String },
         onProfileChange: { type: Function },
         isInitializing: { type: Boolean },
-        whisperDownloading: { type: Boolean },
-        downloadProgress: { type: Object },
-        onCancelDownload: { type: Function },
-        // Internal state
-        _mode: { state: true },
-        _token: { state: true },
         _geminiKey: { state: true },
-        _groqKey: { state: true },
-        _openaiKey: { state: true },
         _geminiLiveModel: { state: true },
-        _groqModel: { state: true },
-        _groqImageModel: { state: true },
-        _disableGroqThinking: { state: true },
-        _tokenError: { state: true },
         _keyError: { state: true },
-        // Local AI state
-        _localLlmModel: { state: true },
-        _useCustomLocalLlmModel: { state: true },
-        _whisperModel: { state: true },
-        _showLocalHelp: { state: true },
     };
 
     constructor() {
@@ -718,25 +688,10 @@ export class MainView extends LitElement {
         this.selectedProfile = 'interview';
         this.onProfileChange = () => {};
         this.isInitializing = false;
-        this.whisperDownloading = false;
-        this.downloadProgress = { active: false, label: '', percentage: null };
-        this.onCancelDownload = () => {};
 
-        this._mode = 'byok';
-        this._token = '';
         this._geminiKey = '';
-        this._groqKey = '';
-        this._openaiKey = '';
         this._geminiLiveModel = 'gemini-3.1-flash-live-preview';
-        this._groqModel = 'qwen/qwen3.6-27b';
-        this._groqImageModel = 'qwen/qwen3.6-27b';
-        this._disableGroqThinking = true;
-        this._tokenError = false;
         this._keyError = false;
-        this._showLocalHelp = false;
-        this._localLlmModel = 'unsloth/Qwen3.5-4B-GGUF:Q4_K_M';
-        this._useCustomLocalLlmModel = false;
-        this._whisperModel = 'tiny.en';
 
         this._animId = null;
         this._time = 0;
@@ -749,34 +704,9 @@ export class MainView extends LitElement {
 
     async _loadFromStorage() {
         try {
-            const [config, prefs, creds] = await Promise.all([
-                wellLearn.storage.getConfig(),
-                wellLearn.storage.getPreferences(),
-                wellLearn.storage.getCredentials().catch(() => ({})),
-            ]);
-
-            const storedMode = prefs.providerMode || 'byok';
-            this._mode = storedMode === 'cloud' ? 'byok' : storedMode;
-
-            if (storedMode === 'cloud') {
-                await wellLearn.storage.updatePreference('providerMode', this._mode);
-            }
-
-            // Load keys
-            this._token = creds.cloudToken || '';
+            const config = await wellLearn.storage.getConfig();
             this._geminiKey = (await wellLearn.storage.getApiKey().catch(() => '')) || '';
-            this._groqKey = (await wellLearn.storage.getGroqApiKey().catch(() => '')) || '';
-            this._openaiKey = creds.openaiKey || '';
             this._geminiLiveModel = config.geminiLiveModel || 'gemini-3.1-flash-live-preview';
-            this._groqModel = config.groqModel || 'qwen/qwen3.6-27b';
-            this._groqImageModel = config.groqImageModel || 'qwen/qwen3.6-27b';
-            this._disableGroqThinking = config.disableGroqThinking === true;
-
-            // Load local AI settings
-            this._localLlmModel = prefs.localLlmModel || 'unsloth/Qwen3.5-4B-GGUF:Q4_K_M';
-            this._useCustomLocalLlmModel = !LOCAL_LLM_PRESETS.some(preset => preset.value === this._localLlmModel);
-            this._whisperModel = prefs.whisperModel || 'tiny.en';
-
             this.requestUpdate();
         } catch (e) {
             console.error('Error loading MainView storage:', e);
@@ -794,15 +724,8 @@ export class MainView extends LitElement {
         if (this._animId) cancelAnimationFrame(this._animId);
     }
 
-    updated(changedProperties) {
-        super.updated(changedProperties);
-        if (changedProperties.has('_mode')) {
-            // Stop old animation when switching modes
-            if (this._animId) {
-                cancelAnimationFrame(this._animId);
-                this._animId = null;
-            }
-        }
+    firstUpdated() {
+        this._initButtonAurora();
     }
 
     _initButtonAurora() {
@@ -811,7 +734,6 @@ export class MainView extends LitElement {
         const dither = this.shadowRoot.querySelector('canvas.btn-dither');
         if (!aurora || !dither || !btn) return;
 
-        // Mouse tracking
         this._mouseX = -1;
         this._mouseY = -1;
         btn.addEventListener('mousemove', e => {
@@ -824,10 +746,9 @@ export class MainView extends LitElement {
             this._mouseY = -1;
         });
 
-        // Dither
         const blockSize = 8;
-        const cols = Math.ceil(aurora.offsetWidth / blockSize);
-        const rows = Math.ceil(aurora.offsetHeight / blockSize);
+        const cols = Math.ceil(aurora.offsetWidth / blockSize) || 30;
+        const rows = Math.ceil(aurora.offsetHeight / blockSize) || 6;
         dither.width = cols;
         dither.height = rows;
         const dCtx = dither.getContext('2d');
@@ -841,11 +762,10 @@ export class MainView extends LitElement {
         }
         dCtx.putImageData(img, 0, 0);
 
-        // Aurora
         const ctx = aurora.getContext('2d');
         const scale = 0.4;
-        aurora.width = Math.floor(aurora.offsetWidth * scale);
-        aurora.height = Math.floor(aurora.offsetHeight * scale);
+        aurora.width = Math.floor(aurora.offsetWidth * scale) || 100;
+        aurora.height = Math.floor(aurora.offsetHeight * scale) || 20;
 
         const blobs = [
             { color: [120, 160, 230], x: 0.1, y: 0.3, vx: 0.25, vy: 0.2, phase: 0 },
@@ -900,11 +820,6 @@ export class MainView extends LitElement {
     }
 
     _handleKeydown(e) {
-        if (e.key === 'Escape' && this._showLocalHelp) {
-            this._closeLocalHelp();
-            return;
-        }
-
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
         if ((isMac ? e.metaKey : e.ctrlKey) && e.key === 'Enter') {
             e.preventDefault();
@@ -914,34 +829,10 @@ export class MainView extends LitElement {
 
     // ── Persistence ──
 
-    async _saveMode(mode) {
-        this._mode = mode;
-        this._tokenError = false;
-        this._keyError = false;
-        await wellLearn.storage.updatePreference('providerMode', mode);
-        this.requestUpdate();
-    }
-
-    async _saveToken(val) {
-        this._token = val;
-        this._tokenError = false;
-        try {
-            const creds = await wellLearn.storage.getCredentials().catch(() => ({}));
-            await wellLearn.storage.setCredentials({ ...creds, cloudToken: val });
-        } catch (e) {}
-        this.requestUpdate();
-    }
-
     async _saveGeminiKey(val) {
         this._geminiKey = val;
         this._keyError = false;
         await wellLearn.storage.setApiKey(val);
-        this.requestUpdate();
-    }
-
-    async _saveGroqKey(val) {
-        this._groqKey = val;
-        await wellLearn.storage.setGroqApiKey(val);
         this.requestUpdate();
     }
 
@@ -951,97 +842,28 @@ export class MainView extends LitElement {
         this.requestUpdate();
     }
 
-    async _saveGroqModel(val) {
-        this._groqModel = val;
-        await wellLearn.storage.updateConfig('groqModel', val);
-        this.requestUpdate();
-    }
-
-    async _saveGroqImageModel(val) {
-        this._groqImageModel = val;
-        await wellLearn.storage.updateConfig('groqImageModel', val);
-        this.requestUpdate();
-    }
-
-    async _saveDisableGroqThinking(disabled) {
-        this._disableGroqThinking = disabled;
-        await wellLearn.storage.updateConfig('disableGroqThinking', disabled);
-        this.requestUpdate();
-    }
-
-    async _saveOpenaiKey(val) {
-        this._openaiKey = val;
-        try {
-            const creds = await wellLearn.storage.getCredentials().catch(() => ({}));
-            await wellLearn.storage.setCredentials({ ...creds, openaiKey: val });
-        } catch (e) {}
-        this.requestUpdate();
-    }
-
-    async _saveLocalLlmModel(val) {
-        this._localLlmModel = val;
-        await wellLearn.storage.updatePreference('localLlmModel', val);
-        this.requestUpdate();
-    }
-
-    async _selectLocalLlmModel(value) {
-        if (value === 'custom') {
-            this._useCustomLocalLlmModel = true;
-            this.requestUpdate();
-            return;
-        }
-
-        this._useCustomLocalLlmModel = false;
-        await this._saveLocalLlmModel(value);
-    }
-
-    async _saveWhisperModel(val) {
-        this._whisperModel = val;
-        await wellLearn.storage.updatePreference('whisperModel', val);
-        this.requestUpdate();
-    }
-
     _handleProfileChange(e) {
         this.onProfileChange(e.target.value);
-    }
-
-    _openLocalHelp() {
-        this._showLocalHelp = true;
-    }
-
-    _closeLocalHelp() {
-        this._showLocalHelp = false;
-    }
-
-    _handleHelpDialogClick(e) {
-        e.stopPropagation();
     }
 
     // ── Start ──
 
     _handleStart() {
-        if (this.isInitializing || this.downloadProgress.active) return;
+        if (this.isInitializing) return;
 
-        if (this._mode === 'byok') {
-            if (!this._geminiKey.trim()) {
-                this._keyError = true;
-                this.requestUpdate();
-                return;
-            }
-        } else if (this._mode === 'local') {
-            if (!this._localLlmModel.trim()) {
-                return;
-            }
+        if (!this._geminiKey.trim()) {
+            this._keyError = true;
+            this.requestUpdate();
+            return;
         }
 
         this.onStart();
     }
 
     triggerApiKeyError() {
-        this._keyError = this._mode !== 'local';
+        this._keyError = true;
         this.requestUpdate();
         setTimeout(() => {
-            this._tokenError = false;
             this._keyError = false;
             this.requestUpdate();
         }, 2000);
@@ -1051,9 +873,6 @@ export class MainView extends LitElement {
 
     _renderStartButton() {
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-        const isDownloading = this._mode === 'local' && this.downloadProgress.active;
-        const percentage = this.downloadProgress.percentage;
-        const hasPercentage = Number.isFinite(percentage);
 
         const cmdIcon = html`<svg
             xmlns="http://www.w3.org/2000/svg"
@@ -1100,53 +919,19 @@ export class MainView extends LitElement {
 
         return html`
             <button
-                class="start-button ${this.isInitializing || isDownloading ? 'disabled' : ''}"
-                ?disabled=${this.isInitializing || isDownloading}
+                class="start-button ${this.isInitializing ? 'disabled' : ''}"
+                ?disabled=${this.isInitializing}
                 @click=${() => this._handleStart()}
             >
                 <canvas class="btn-aurora"></canvas>
                 <canvas class="btn-dither"></canvas>
-                ${
-                    isDownloading
-                        ? html`<span
-                              class="download-progress-fill ${hasPercentage ? '' : 'indeterminate'}"
-                              style=${hasPercentage ? `width: ${percentage}%` : ''}
-                          ></span>`
-                        : ''
-                }
                 <span class="btn-label">
-                    ${isDownloading ? (hasPercentage ? `${percentage}%` : 'Preparing...') : 'Start Session'}
-                    ${isDownloading ? '' : html`<span class="shortcut-hint">${isMac ? cmdIcon : ctrlIcon}${enterIcon}</span>`}
+                    ${this.isInitializing ? 'Connecting...' : 'Start Session'}
+                    <span class="shortcut-hint">${isMac ? cmdIcon : ctrlIcon}${enterIcon}</span>
                 </span>
             </button>
-            ${
-                isDownloading
-                    ? html`
-                          <div class="download-controls">
-                              <span>Downloading: ${this.downloadProgress.label || 'Local AI files'}</span>
-                              <button class="download-cancel" @click=${() => this.onCancelDownload()}>Cancel</button>
-                          </div>
-                      `
-                    : ''
-            }
         `;
     }
-
-    _renderDivider() {
-        return html`
-            <div class="divider">
-                <div class="divider-line"></div>
-                <span class="divider-text">or</span>
-                <div class="divider-line"></div>
-            </div>
-        `;
-    }
-
-    // ── Cloud mode ──
-    // Cloud UI intentionally disabled. Backend cloud wiring is still present in
-    // the codebase, but the renderer no longer exposes this setup path.
-
-    // ── BYOK mode ──
 
     _renderConfigChevron() {
         return html`
@@ -1156,263 +941,45 @@ export class MainView extends LitElement {
         `;
     }
 
-    _renderByokMode() {
-        return html`
-            <details class="config-section">
-                <summary class="config-summary">
-                    <span class="config-summary-text">
-                        <span class="config-summary-title">Transcription</span>
-                        <span class="config-summary-description">Gemini Live connection</span>
-                    </span>
-                    ${this._renderConfigChevron()}
-                </summary>
-                <div class="config-content">
-                    <div class="form-group">
-                        <label class="form-label">Gemini API Key</label>
-                        <input
-                            type="password"
-                            placeholder="Required"
-                            .value=${this._geminiKey}
-                            @input=${e => this._saveGeminiKey(e.target.value)}
-                            class=${this._keyError ? 'error' : ''}
-                        />
-                        <div class="form-hint">
-                            <span class="link" @click=${() => this.onExternalLink('https://aistudio.google.com/apikey')}>Get Gemini key</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Gemini Live Model</label>
-                        <input type="text" .value=${this._geminiLiveModel} @input=${e => this._saveGeminiLiveModel(e.target.value)} />
-                    </div>
-                </div>
-            </details>
-
-            <details class="config-section">
-                <summary class="config-summary">
-                    <span class="config-summary-text">
-                        <span class="config-summary-title">AI responses</span>
-                        <span class="config-summary-description">Groq key and response model</span>
-                    </span>
-                    ${this._renderConfigChevron()}
-                </summary>
-                <div class="config-content">
-                    <div class="form-group">
-                        <label class="form-label">Groq API Key</label>
-                        <input type="password" placeholder="Optional" .value=${this._groqKey} @input=${e => this._saveGroqKey(e.target.value)} />
-                        <div class="form-hint">
-                            <span class="link" @click=${() => this.onExternalLink('https://console.groq.com/keys')}>Get Groq key</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Groq Model</label>
-                        <input type="text" .value=${this._groqModel} @input=${e => this._saveGroqModel(e.target.value)} />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Groq Image Model</label>
-                        <input type="text" .value=${this._groqImageModel} @input=${e => this._saveGroqImageModel(e.target.value)} />
-                    </div>
-
-                    <label class="config-checkbox">
-                        <input
-                            type="checkbox"
-                            .checked=${this._disableGroqThinking}
-                            @change=${e => this._saveDisableGroqThinking(e.target.checked)}
-                        />
-                        <span class="config-checkbox-text">
-                            <span class="config-summary-title">Disable thinking</span>
-                            <span class="config-summary-description">Faster responses with less internal reasoning</span>
-                        </span>
-                    </label>
-
-                    <div class="config-note">
-                        If the Groq API key is empty, Gemini Live is used for answers instead. Its answer quality may be lower.
-                    </div>
-                </div>
-            </details>
-
-            ${this._renderStartButton()} ${this._renderDivider()}
-
-            <!-- Cloud promo intentionally removed from the active UI. -->
-
-            <div class="mode-links">
-                <button class="mode-link" @click=${() => this._saveMode('local')}>Use local AI</button>
-            </div>
-        `;
-    }
-
-    // ── Local AI mode ──
-
-    _renderLocalMode() {
-        return html`
-            <details class="config-section">
-                <summary class="config-summary">
-                    <span class="config-summary-text">
-                        <span class="config-summary-title">Language model</span>
-                        <span class="config-summary-description">Local GGUF model</span>
-                    </span>
-                    ${this._renderConfigChevron()}
-                </summary>
-                <div class="config-content">
-                    <div class="form-group">
-                        <label class="form-label">Model</label>
-                        <select
-                            .value=${this._useCustomLocalLlmModel ? 'custom' : this._localLlmModel}
-                            @change=${event => this._selectLocalLlmModel(event.target.value)}
-                        >
-                            ${LOCAL_LLM_PRESETS.map(preset => html`<option value=${preset.value}>${preset.label}</option>`)}
-                            <option value="custom">Custom Hugging Face model or local GGUF…</option>
-                        </select>
-                        ${
-                            this._useCustomLocalLlmModel
-                                ? html`
-                                      <input
-                                          type="text"
-                                          placeholder="owner/repository:quant or /absolute/model.gguf"
-                                          .value=${this._localLlmModel}
-                                          @input=${event => this._saveLocalLlmModel(event.target.value)}
-                                      />
-                                  `
-                                : ''
-                        }
-                        <div class="form-hint">Sizes include the vision model. Q4 uses less memory; Q8 preserves more quality.</div>
-                    </div>
-                </div>
-            </details>
-
-            <details class="config-section">
-                <summary class="config-summary">
-                    <span class="config-summary-text">
-                        <span class="config-summary-title">Transcription</span>
-                        <span class="config-summary-description">Whisper speech-to-text model</span>
-                    </span>
-                    ${this._renderConfigChevron()}
-                </summary>
-                <div class="config-content">
-                    <div class="form-group">
-                        <div class="whisper-label-row">
-                            <label class="form-label">Whisper Model</label>
-                            ${this.whisperDownloading ? html`<div class="whisper-spinner"></div>` : ''}
-                        </div>
-                        <select .value=${this._whisperModel} @change=${e => this._saveWhisperModel(e.target.value)}>
-                            <option value="tiny.en" ?selected=${this._whisperModel === 'tiny.en'}>Tiny English (75 MB, fastest)</option>
-                            <option value="base.en" ?selected=${this._whisperModel === 'base.en'}>Base English (142 MB)</option>
-                            <option value="small.en" ?selected=${this._whisperModel === 'small.en'}>Small English (466 MB, most accurate)</option>
-                        </select>
-                        <div class="form-hint">${this.whisperDownloading ? 'Downloading model...' : 'Downloaded automatically on first use'}</div>
-                    </div>
-                </div>
-            </details>
-
-            ${this._renderStartButton()} ${this._renderDivider()}
-
-            <!-- Cloud promo intentionally removed from the active UI. -->
-
-            <div class="mode-links">
-                <button class="mode-link" @click=${() => this._saveMode('byok')}>Use own API keys</button>
-            </div>
-        `;
-    }
-
     // ── Main render ──
 
     render() {
-        const helpIcon = html`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                <path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m9 5v.01" />
-                <path d="M12 13.5a1.5 1.5 0 0 1 1-1.5a2.6 2.6 0 1 0-3-4" />
-            </g>
-        </svg>`;
-        const closeIcon = html`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6L6 18M6 6l12 12" />
-        </svg>`;
-
         return html`
             <div class="form-wrapper">
-                ${
-                    this._mode === 'local'
-                        ? html`
-                              <div class="title-row">
-                                  <div class="page-title">WellLearn <span class="mode-suffix">Local AI</span></div>
-                                  <button class="help-btn" @click=${this._openLocalHelp} aria-label="Open Local AI help">${helpIcon}</button>
-                              </div>
-                          `
-                        : html` <div class="page-title">${html`WellLearn <span class="mode-suffix">BYOK</span>`}</div> `
-                }
-                <div class="page-subtitle">${this._mode === 'byok' ? 'Bring your own API keys' : 'Run models locally on your machine'}</div>
+                <div class="page-title">WellLearn</div>
+                <div class="page-subtitle">Powered by Google Gemini</div>
 
-                <!-- Cloud mode render branch intentionally disabled. -->
-                ${this._mode === 'byok' ? this._renderByokMode() : ''} ${this._mode === 'local' ? this._renderLocalMode() : ''}
-            </div>
-            ${this._mode === 'local' && this._showLocalHelp ? this._renderLocalHelp(closeIcon) : ''}
-        `;
-    }
+                <details class="config-section" open>
+                    <summary class="config-summary">
+                        <span class="config-summary-text">
+                            <span class="config-summary-title">Gemini Configuration</span>
+                            <span class="config-summary-description">API Key and Live Model</span>
+                        </span>
+                        ${this._renderConfigChevron()}
+                    </summary>
+                    <div class="config-content">
+                        <div class="form-group">
+                            <label class="form-label">Gemini API Key</label>
+                            <input
+                                type="password"
+                                placeholder="Required"
+                                .value=${this._geminiKey}
+                                @input=${e => this._saveGeminiKey(e.target.value)}
+                                class=${this._keyError ? 'error' : ''}
+                            />
+                            <div class="form-hint">
+                                <span class="link" @click=${() => this.onExternalLink('https://aistudio.google.com/apikey')}>Get Gemini key</span>
+                            </div>
+                        </div>
 
-    _renderLocalHelp(closeIcon) {
-        return html`
-            <div class="help-dialog-backdrop" @click=${this._closeLocalHelp}>
-                <section class="help-dialog" role="dialog" aria-modal="true" aria-labelledby="local-help-title" @click=${this._handleHelpDialogClick}>
-                    <div class="help-dialog-header">
-                        <div id="local-help-title" class="help-dialog-title">Local AI setup</div>
-                        <button class="help-btn" @click=${this._closeLocalHelp} aria-label="Close Local AI help">${closeIcon}</button>
+                        <div class="form-group">
+                            <label class="form-label">Gemini Live Model</label>
+                            <input type="text" .value=${this._geminiLiveModel} @input=${e => this._saveGeminiLiveModel(e.target.value)} />
+                        </div>
                     </div>
+                </details>
 
-                    <div class="help-content">
-                        <div class="help-section">
-                            <div class="help-section-title">Native local AI</div>
-                            <div class="help-section-text">
-                                WellLearn runs llama.cpp and whisper.cpp directly. Everything stays on your computer — no external AI service or
-                                Ollama installation is required.
-                            </div>
-                        </div>
-
-                        <div class="help-section">
-                            <div class="help-section-title">Automatic setup</div>
-                            <div class="help-section-text">
-                                The correct native runners, selected Whisper model, and language model are downloaded and checksum-verified on first
-                                use. They are stored in the WellLearn config directory.
-                            </div>
-                        </div>
-
-                        <div class="help-section">
-                            <div class="help-section-title">Default model</div>
-                            <div class="help-models">
-                                <div class="help-model">
-                                    <span class="help-model-name">Qwen3.5 4B Q4_K_M</span><span>About 2.7 GB — balanced local quality and speed</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="help-section">
-                            <div class="help-section-title">Whisper</div>
-                            <div class="help-section-text">
-                                The selected whisper.cpp model is downloaded automatically once and kept in the config directory.
-                            </div>
-                        </div>
-
-                        <hr class="help-divider" />
-
-                        <div class="help-section">
-                            <div class="help-section-title">Computer hanging or slow?</div>
-                            <div class="help-section-text">
-                                Running models locally uses a lot of RAM and CPU. If your computer slows down or freezes, it's likely the LLM. Switch
-                                back to BYOK mode if you want to use a hosted provider instead.
-                            </div>
-                        </div>
-
-                        <button
-                            class="help-cloud-btn"
-                            @click=${() => {
-                                this._closeLocalHelp();
-                                this._saveMode('byok');
-                            }}
-                        >
-                            Switch to BYOK
-                        </button>
-                    </div>
-                </section>
+                ${this._renderStartButton()}
             </div>
         `;
     }
