@@ -434,6 +434,7 @@ export class WellLearnApp extends LitElement {
         _storageLoaded: { state: true },
         _updateAvailable: { state: true },
         _whisperDownloading: { state: true },
+        _isCompact: { state: true },
     };
 
     constructor() {
@@ -443,6 +444,7 @@ export class WellLearnApp extends LitElement {
         this.startTime = null;
         this.isRecording = false;
         this.sessionActive = false;
+        this._isCompact = false;
         this.selectedProfile = 'interview';
         this.selectedLanguage = 'en-US';
         this.selectedScreenshotInterval = '5';
@@ -523,6 +525,10 @@ export class WellLearnApp extends LitElement {
             ipcRenderer.on('whisper-downloading', (_, downloading) => {
                 this._whisperDownloading = downloading;
             });
+            ipcRenderer.on('compact-mode-changed', (_, isCompact) => {
+                this._isCompact = isCompact;
+                this.requestUpdate();
+            });
         }
     }
 
@@ -537,6 +543,7 @@ export class WellLearnApp extends LitElement {
             ipcRenderer.removeAllListeners('click-through-toggled');
             ipcRenderer.removeAllListeners('reconnect-failed');
             ipcRenderer.removeAllListeners('whisper-downloading');
+            ipcRenderer.removeAllListeners('compact-mode-changed');
         }
     }
 
@@ -623,7 +630,11 @@ export class WellLearnApp extends LitElement {
     async _handleMinimize() {
         if (window.require) {
             const { ipcRenderer } = window.require('electron');
-            await ipcRenderer.invoke('window-minimize');
+            const res = await ipcRenderer.invoke('window-minimize');
+            if (res && typeof res.isCompact === 'boolean') {
+                this._isCompact = res.isCompact;
+                this.requestUpdate();
+            }
         }
     }
 
@@ -883,7 +894,7 @@ export class WellLearnApp extends LitElement {
         ];
 
         return html`
-            <div class="sidebar ${this._isLiveMode() ? 'hidden' : ''}">
+            <div class="sidebar ${this._isLiveMode() || this._isCompact ? 'hidden' : ''}">
                 <div class="sidebar-brand">
                     <h1>WellLearn</h1>
                 </div>
@@ -962,10 +973,11 @@ export class WellLearnApp extends LitElement {
                                 <line x1="1" y1="1" x2="23" y2="23"></line>
                             </svg>
                         </button>
-                        <button class="win-btn minimize" @click=${() => this._handleMinimize()} title="Minimize">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
+                        <button class="win-btn minimize" @click=${() => this._handleMinimize()} title="${this._isCompact ? 'Expand window' : 'Minimize a bit'}">
+                            ${this._isCompact
+                                ? html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>`
+                                : html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
+                            }
                         </button>
                         <button class="win-btn close" @click=${() => this.handleClose()} title="End session">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -988,7 +1000,7 @@ export class WellLearnApp extends LitElement {
         const isLive = this._isLiveMode();
 
         return html`
-            <div class="app-shell">
+            <div class="app-shell ${this._isCompact ? 'compact' : ''}">
                 <div class="top-drag-bar ${isLive ? 'hidden' : ''}">
                     <div class="drag-region"></div>
                     <div class="window-controls">
@@ -998,10 +1010,11 @@ export class WellLearnApp extends LitElement {
                                 <line x1="1" y1="1" x2="23" y2="23"></line>
                             </svg>
                         </button>
-                        <button class="win-btn minimize" @click=${() => this._handleMinimize()} title="Minimize">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
+                        <button class="win-btn minimize" @click=${() => this._handleMinimize()} title="${this._isCompact ? 'Expand window' : 'Minimize a bit'}">
+                            ${this._isCompact
+                                ? html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>`
+                                : html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
+                            }
                         </button>
                         <button class="win-btn close" @click=${() => this.handleClose()} title="Close">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
