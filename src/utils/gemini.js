@@ -43,8 +43,10 @@ const RECONNECT_DELAY = 2000;
 function sendToRenderer(channel, data) {
     if (BrowserWindow && typeof BrowserWindow.getAllWindows === 'function') {
         const windows = BrowserWindow.getAllWindows();
-        if (windows.length > 0 && windows[0] && windows[0].webContents) {
-            windows[0].webContents.send(channel, data);
+        for (const win of windows) {
+            if (win && win.webContents && !win.isDestroyed()) {
+                win.webContents.send(channel, data);
+            }
         }
     }
 }
@@ -244,16 +246,17 @@ async function initializeGeminiSession(apiKey, customPrompt = '', profile = 'int
                         }
                     }
 
-                    // Extract incoming streaming text from modelTurn parts or outputTranscription
+                    // Extract incoming streaming text (check outputTranscription first for Live audio/transcription stream)
                     let incomingText = '';
-                    if (message.serverContent?.modelTurn?.parts) {
+                    if (message.serverContent?.outputTranscription?.text) {
+                        incomingText = message.serverContent.outputTranscription.text;
+                    }
+                    if (!incomingText && message.serverContent?.modelTurn?.parts) {
                         for (const part of message.serverContent.modelTurn.parts) {
                             if (part.text) {
                                 incomingText += part.text;
                             }
                         }
-                    } else if (message.serverContent?.outputTranscription?.text) {
-                        incomingText = message.serverContent.outputTranscription.text;
                     }
 
                     if (incomingText) {
@@ -682,6 +685,8 @@ function setupGeminiIpcHandlers(geminiSessionRef) {
 
         try {
             console.log('Sending text message:', text);
+            currentTranscription = `[Interviewer]: ${text.trim()}`;
+            messageBuffer = '';
             if (typeof geminiSessionRef.current.sendClientContent === 'function') {
                 await geminiSessionRef.current.sendClientContent({
                     turns: [{ role: 'user', parts: [{ text: text.trim() }] }],
