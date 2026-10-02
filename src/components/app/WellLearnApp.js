@@ -1,4 +1,4 @@
-﻿import { html, css, LitElement } from '../../assets/lit-core-2.7.4.min.js';
+import { html, css, LitElement } from '../../assets/lit-core-2.7.4.min.js';
 import { MainView } from '../views/MainView.js';
 import { CustomizeView } from '../views/CustomizeView.js';
 import { HelpView } from '../views/HelpView.js';
@@ -387,7 +387,6 @@ export class WellLearnApp extends LitElement {
         _storageLoaded: { state: true },
         _updateAvailable: { state: true },
         _whisperDownloading: { state: true },
-        _localAiDownloadProgress: { state: true },
     };
 
     constructor() {
@@ -413,7 +412,6 @@ export class WellLearnApp extends LitElement {
         this._timerInterval = null;
         this._updateAvailable = false;
         this._whisperDownloading = false;
-        this._localAiDownloadProgress = { active: false, label: '', percentage: null };
         this._localVersion = '';
 
         this._loadFromStorage();
@@ -478,9 +476,6 @@ export class WellLearnApp extends LitElement {
             ipcRenderer.on('whisper-downloading', (_, downloading) => {
                 this._whisperDownloading = downloading;
             });
-            ipcRenderer.on('local-ai-download-progress', (_, progress) => {
-                this._localAiDownloadProgress = progress;
-            });
         }
     }
 
@@ -495,7 +490,6 @@ export class WellLearnApp extends LitElement {
             ipcRenderer.removeAllListeners('click-through-toggled');
             ipcRenderer.removeAllListeners('reconnect-failed');
             ipcRenderer.removeAllListeners('whisper-downloading');
-            ipcRenderer.removeAllListeners('local-ai-download-progress');
         }
     }
 
@@ -596,48 +590,16 @@ export class WellLearnApp extends LitElement {
     // ── Session start ──
 
     async handleStart() {
-        const prefs = await wellLearn.storage.getPreferences();
-        const providerMode = prefs.providerMode === 'cloud' ? 'byok' : prefs.providerMode || 'byok';
-
-        if (providerMode === 'cloud') {
-            const creds = await wellLearn.storage.getCredentials();
-            if (!creds.cloudToken || creds.cloudToken.trim() === '') {
-                const mainView = this.shadowRoot.querySelector('main-view');
-                if (mainView && mainView.triggerApiKeyError) {
-                    mainView.triggerApiKeyError();
-                }
-                return;
+        const apiKey = await wellLearn.storage.getApiKey();
+        if (!apiKey || apiKey.trim() === '') {
+            const mainView = this.shadowRoot.querySelector('main-view');
+            if (mainView && mainView.triggerApiKeyError) {
+                mainView.triggerApiKeyError();
             }
-
-            const success = await wellLearn.initializeCloud(this.selectedProfile);
-            if (!success) {
-                const mainView = this.shadowRoot.querySelector('main-view');
-                if (mainView && mainView.triggerApiKeyError) {
-                    mainView.triggerApiKeyError();
-                }
-                return;
-            }
-        } else if (providerMode === 'local') {
-            const success = await wellLearn.initializeLocal(this.selectedProfile);
-            if (!success) {
-                const mainView = this.shadowRoot.querySelector('main-view');
-                if (mainView && mainView.triggerApiKeyError) {
-                    mainView.triggerApiKeyError();
-                }
-                return;
-            }
-        } else {
-            const apiKey = await wellLearn.storage.getApiKey();
-            if (!apiKey || apiKey === '') {
-                const mainView = this.shadowRoot.querySelector('main-view');
-                if (mainView && mainView.triggerApiKeyError) {
-                    mainView.triggerApiKeyError();
-                }
-                return;
-            }
-
-            await wellLearn.initializeGemini(this.selectedProfile, this.selectedLanguage);
+            return;
         }
+
+        await wellLearn.initializeGemini(this.selectedProfile, this.selectedLanguage);
 
         wellLearn.startCapture(this.selectedScreenshotInterval, this.selectedImageQuality);
         this.responses = [];
@@ -648,21 +610,10 @@ export class WellLearnApp extends LitElement {
         this._startTimer();
     }
 
-    async handleCancelLocalDownload() {
-        await wellLearn.cancelLocalInitialization();
-    }
-
     async handleAPIKeyHelp() {
         if (window.require) {
             const { ipcRenderer } = window.require('electron');
             await ipcRenderer.invoke('open-external', 'https://welllearn.com/help/api-key');
-        }
-    }
-
-    async handleGroqAPIKeyHelp() {
-        if (window.require) {
-            const { ipcRenderer } = window.require('electron');
-            await ipcRenderer.invoke('open-external', 'https://console.groq.com/keys');
         }
     }
 
@@ -752,9 +703,6 @@ export class WellLearnApp extends LitElement {
                         .onProfileChange=${p => this.handleProfileChange(p)}
                         .onStart=${() => this.handleStart()}
                         .onExternalLink=${url => this.handleExternalLinkClick(url)}
-                        .whisperDownloading=${this._whisperDownloading}
-                        .downloadProgress=${this._localAiDownloadProgress}
-                        .onCancelDownload=${() => this.handleCancelLocalDownload()}
                     ></main-view>
                 `;
 

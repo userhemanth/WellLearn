@@ -1,4 +1,4 @@
-﻿// renderer.js
+// renderer.js
 const { ipcRenderer } = require('electron');
 
 let mediaStream = null;
@@ -48,13 +48,6 @@ const storage = {
     },
     async setApiKey(apiKey) {
         return ipcRenderer.invoke('storage:set-api-key', apiKey);
-    },
-    async getGroqApiKey() {
-        const result = await ipcRenderer.invoke('storage:get-groq-api-key');
-        return result.success ? result.data : '';
-    },
-    async setGroqApiKey(groqApiKey) {
-        return ipcRenderer.invoke('storage:set-groq-api-key', groqApiKey);
     },
 
     // Preferences
@@ -151,26 +144,6 @@ async function initializeGemini(profile = 'interview', language = 'en-US') {
             wellLearn.setStatus('error');
         }
     }
-}
-
-async function initializeLocal(profile = 'interview') {
-    const prefs = await storage.getPreferences();
-    const localLlmModel = prefs.localLlmModel || 'unsloth/Qwen3.5-4B-GGUF:Q4_K_M';
-    const whisperModel = prefs.whisperModel || 'tiny.en';
-    const customPrompt = prefs.customPrompt || '';
-
-    const success = await ipcRenderer.invoke('initialize-local', localLlmModel, whisperModel, profile, customPrompt);
-    if (success) {
-        wellLearn.setStatus('Local AI Live');
-        return true;
-    } else {
-        wellLearn.setStatus('error');
-        return false;
-    }
-}
-
-async function cancelLocalInitialization() {
-    return ipcRenderer.invoke('cancel-local-initialization');
 }
 
 async function initializeCloud(profile = 'interview') {
@@ -1087,8 +1060,6 @@ const wellLearn = {
     // Core functionality
     initializeGemini,
     initializeCloud,
-    initializeLocal,
-    cancelLocalInitialization,
     startCapture,
     stopCapture,
     sendTextMessage,
