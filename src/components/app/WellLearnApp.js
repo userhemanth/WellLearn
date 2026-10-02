@@ -315,26 +315,47 @@ export class WellLearnApp extends LitElement {
             z-index: 1;
         }
 
-        .live-bar-back {
-            display: flex;
+        .live-bar-home-btn {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
+            gap: 6px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            font-family: var(--font-mono, monospace);
             cursor: pointer;
-            background: none;
-            border: none;
-            padding: var(--space-xs);
-            border-radius: var(--radius-sm);
-            transition: color var(--transition);
+            transition: all 0.15s ease;
+            -webkit-app-region: no-drag;
         }
 
-        .live-bar-back:hover {
+        .live-bar-home-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: var(--text-primary);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+        }
+
+        .live-bar-home-btn svg {
+            width: 13px;
+            height: 13px;
+            color: var(--text-muted);
+            transition: color 0.15s ease;
+        }
+
+        .live-bar-home-btn:hover svg {
             color: var(--text-primary);
         }
 
-        .live-bar-back svg {
-            width: 14px;
-            height: 14px;
+        .live-bar-home-btn .key-badge {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 10px;
+            letter-spacing: 0.02em;
         }
 
         .live-bar-center {
@@ -511,6 +532,27 @@ export class WellLearnApp extends LitElement {
     connectedCallback() {
         super.connectedCallback();
 
+        this._handleGlobalKeyDown = e => {
+            const isMac = (typeof wellLearn !== 'undefined' && wellLearn.isMacOS) || navigator.platform.includes('Mac');
+            const modKey = isMac ? e.metaKey || e.ctrlKey : e.ctrlKey;
+            if (modKey && !e.altKey) {
+                const key = e.key ? e.key.toLowerCase() : '';
+                if (key === 'h') {
+                    e.preventDefault();
+                    this.handleReturnHome();
+                    return;
+                }
+                if (key === 'o') {
+                    e.preventDefault();
+                    if (this.currentView !== 'assistant') {
+                        this.handleStart();
+                    }
+                    return;
+                }
+            }
+        };
+        window.addEventListener('keydown', this._handleGlobalKeyDown);
+
         if (window.require) {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.on('new-response', (_, response) => this.addNewResponse(response));
@@ -533,6 +575,9 @@ export class WellLearnApp extends LitElement {
     disconnectedCallback() {
         super.disconnectedCallback();
         this._stopTimer();
+        if (this._handleGlobalKeyDown) {
+            window.removeEventListener('keydown', this._handleGlobalKeyDown);
+        }
         if (window.require) {
             const { ipcRenderer } = window.require('electron');
             ipcRenderer.removeAllListeners('new-response');
@@ -605,6 +650,14 @@ export class WellLearnApp extends LitElement {
     navigate(view) {
         this.currentView = view;
         this.requestUpdate();
+    }
+
+    async handleReturnHome() {
+        if (this.currentView === 'assistant') {
+            await this.handleClose();
+        } else {
+            this.navigate('main');
+        }
     }
 
     async handleClose() {
@@ -923,14 +976,12 @@ export class WellLearnApp extends LitElement {
         return html`
             <div class="live-bar">
                 <div class="live-bar-left">
-                    <button class="live-bar-back" @click=${() => this.handleClose()} title="End session">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                                fill-rule="evenodd"
-                                d="M12.79 5.23a.75.75 0 0 1-.02 1.06L8.832 10l3.938 3.71a.75.75 0 1 1-1.04 1.08l-4.5-4.25a.75.75 0 0 1 0-1.08l4.5-4.25a.75.75 0 0 1 1.06.02Z"
-                                clip-rule="evenodd"
-                            />
+                    <button class="live-bar-home-btn" @click=${() => this.handleReturnHome()} title="Home (Ctrl+H)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
                         </svg>
+                        <span class="key-badge">Ctrl+H</span>
                     </button>
                 </div>
                 <div class="live-bar-center">${profileLabels[this.selectedProfile] || 'Session'}</div>

@@ -417,8 +417,46 @@ export class MainView extends LitElement {
             display: inline-flex;
             align-items: center;
             gap: 2px;
-            opacity: 0.5;
+            opacity: 0.7;
             font-family: var(--font-mono);
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+        }
+
+        .tool-shortcuts-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xs);
+        }
+
+        .tool-shortcut-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: var(--font-size-xs);
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .tool-shortcut-item:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .tool-shortcut-item svg {
+            color: var(--text-secondary);
         }
 
         /* ── Divider ── */
@@ -821,9 +859,13 @@ export class MainView extends LitElement {
 
     _handleKeydown(e) {
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-        if ((isMac ? e.metaKey : e.ctrlKey) && e.key === 'Enter') {
-            e.preventDefault();
-            this._handleStart();
+        const modKey = isMac ? e.metaKey : e.ctrlKey;
+        if (modKey) {
+            const key = e.key ? e.key.toLowerCase() : '';
+            if (key === 'enter' || key === 'o') {
+                e.preventDefault();
+                this._handleStart();
+            }
         }
     }
 
@@ -877,57 +919,38 @@ export class MainView extends LitElement {
         const cmdIcon = html`<svg
             xmlns="http://www.w3.org/2000/svg"
             width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-        >
-            <path
-                d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"
-            />
-        </svg>`;
-        const ctrlIcon = html`<svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-        >
-            <path d="M6 15l6-6 6 6" />
-        </svg>`;
-        const enterIcon = html`<svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-        >
-            <path d="M9 10l-5 5 5 5" />
-            <path d="M20 4v7a4 4 0 0 1-4 4H4" />
-        </svg>`;
+    _renderStartButton() {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const shortcutKey = isMac ? 'Cmd+O' : 'Ctrl+O';
+        const homeShortcut = isMac ? 'Cmd+H' : 'Ctrl+H';
 
         return html`
+            <div class="tool-shortcuts-hint">
+                <span class="tool-shortcut-item" title="Shortcut to start session / open interview page">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    <span>${shortcutKey} Start</span>
+                </span>
+                <span class="tool-shortcut-item" title="Shortcut to return to home page during interview">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <span>${homeShortcut} Home</span>
+                </span>
+            </div>
             <button
                 class="start-button ${this.isInitializing ? 'disabled' : ''}"
                 ?disabled=${this.isInitializing}
                 @click=${() => this._handleStart()}
+                title="Start Session (${shortcutKey} or Click)"
             >
                 <canvas class="btn-aurora"></canvas>
                 <canvas class="btn-dither"></canvas>
                 <span class="btn-label">
                     ${this.isInitializing ? 'Connecting...' : 'Start Session'}
-                    <span class="shortcut-hint">${isMac ? cmdIcon : ctrlIcon}${enterIcon}</span>
+                    <span class="shortcut-hint">${shortcutKey}</span>
                 </span>
             </button>
         `;

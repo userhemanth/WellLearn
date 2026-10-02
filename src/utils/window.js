@@ -98,6 +98,8 @@ function getDefaultKeybinds() {
         moveRight: isMac ? 'Alt+Right' : 'Ctrl+Right',
         toggleVisibility: isMac ? 'Cmd+\\' : 'Ctrl+\\',
         toggleClickThrough: isMac ? 'Cmd+M' : 'Ctrl+M',
+        openInterview: isMac ? 'Cmd+O' : 'Ctrl+O',
+        returnHome: isMac ? 'Cmd+H' : 'Ctrl+H',
         nextStep: isMac ? 'Cmd+Enter' : 'Ctrl+Enter',
         previousResponse: isMac ? 'Cmd+[' : 'Ctrl+[',
         nextResponse: isMac ? 'Cmd+]' : 'Ctrl+]',
@@ -178,13 +180,46 @@ function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessi
                     console.log('Mouse events ignored');
                 } else {
                     mainWindow.setIgnoreMouseEvents(false);
-                    console.log('Mouse events enabled');
                 }
                 mainWindow.webContents.send('click-through-toggled', mouseEventsIgnored);
             });
             console.log(`Registered toggleClickThrough: ${keybinds.toggleClickThrough}`);
         } catch (error) {
             console.error(`Failed to register toggleClickThrough (${keybinds.toggleClickThrough}):`, error);
+        }
+    }
+
+    // Register open interview / start session shortcut
+    if (keybinds.openInterview) {
+        try {
+            globalShortcut.register(keybinds.openInterview, () => {
+                console.log('Open interview shortcut triggered');
+                const isMac = process.platform === 'darwin';
+                const shortcutKey = isMac ? 'cmd+o' : 'ctrl+o';
+                mainWindow.webContents.executeJavaScript(`
+                    wellLearn.handleShortcut('${shortcutKey}');
+                `);
+            });
+            console.log(`Registered openInterview: ${keybinds.openInterview}`);
+        } catch (error) {
+            console.error(`Failed to register openInterview (${keybinds.openInterview}):`, error);
+        }
+    }
+
+    // Register return home shortcut
+    if (keybinds.returnHome) {
+        try {
+            globalShortcut.register(keybinds.returnHome, () => {
+                console.log('Return home shortcut triggered');
+                const isMac = process.platform === 'darwin';
+                const shortcutKey = isMac ? 'cmd+h' : 'ctrl+h';
+                mainWindow.webContents.executeJavaScript(`
+                    wellLearn.handleShortcut('${shortcutKey}');
+                `);
+            });
+            console.log(`Registered returnHome: ${keybinds.returnHome}`);
+        } catch (error) {
+            console.error(`Failed to register returnHome (${keybinds.returnHome}):`, error);
         }
     }
 

@@ -292,6 +292,8 @@ export class CustomizeView extends LitElement {
     getDefaultKeybinds() {
         const isMac = wellLearn.isMacOS || navigator.platform.includes('Mac');
         return {
+            openInterview: isMac ? 'Cmd+O' : 'Ctrl+O',
+            returnHome: isMac ? 'Cmd+H' : 'Ctrl+H',
             moveUp: isMac ? 'Alt+Up' : 'Ctrl+Up',
             moveDown: isMac ? 'Alt+Down' : 'Ctrl+Down',
             moveLeft: isMac ? 'Alt+Left' : 'Ctrl+Left',
@@ -308,6 +310,8 @@ export class CustomizeView extends LitElement {
 
     getKeybindActions() {
         return [
+            { key: 'openInterview', name: 'Open Interview / Start Session', description: 'Start session and enter interview mode (Ctrl+O)' },
+            { key: 'returnHome', name: 'Return to Home', description: 'Exit interview and return to home page (Ctrl+H)' },
             { key: 'moveUp', name: 'Move Window Up', description: 'Move the app window up' },
             { key: 'moveDown', name: 'Move Window Down', description: 'Move the app window down' },
             { key: 'moveLeft', name: 'Move Window Left', description: 'Move the app window left' },

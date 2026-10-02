@@ -762,14 +762,21 @@ ipcRenderer.on('clear-sensitive-data', async () => {
 
 // Handle shortcuts based on current view
 function handleShortcut(shortcutKey) {
+    const key = (shortcutKey || '').toLowerCase();
     const currentView = wellLearn.getCurrentView();
 
-    if (shortcutKey === 'ctrl+enter' || shortcutKey === 'cmd+enter') {
+    if (key === 'ctrl+enter' || key === 'cmd+enter') {
         if (currentView === 'main') {
             wellLearn.element().handleStart();
         } else {
             captureManualScreenshot();
         }
+    } else if (key === 'ctrl+o' || key === 'cmd+o') {
+        if (currentView !== 'assistant') {
+            wellLearn.element().handleStart();
+        }
+    } else if (key === 'ctrl+h' || key === 'cmd+h') {
+        wellLearn.element().handleReturnHome();
     }
 }
 
