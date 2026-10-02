@@ -1,4 +1,4 @@
-﻿const { BrowserWindow, globalShortcut, ipcMain, screen } = require('electron');
+const { BrowserWindow, globalShortcut, ipcMain, screen } = require('electron');
 const path = require('node:path');
 const storage = require('../storage');
 
@@ -48,12 +48,12 @@ function createWindow(sendToRenderer, geminiSessionRef) {
         mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
     }
 
-    // Hide from Windows taskbar
+    // Show in Windows taskbar so the application never disappears
     if (process.platform === 'win32') {
         try {
-            mainWindow.setSkipTaskbar(true);
+            mainWindow.setSkipTaskbar(false);
         } catch (error) {
-            console.warn('Could not hide from taskbar:', error.message);
+            console.warn('Could not set taskbar visibility:', error.message);
         }
     }
 
@@ -308,9 +308,45 @@ function setupWindowIpcHandlers(mainWindow, sendToRenderer, geminiSessionRef) {
         }
     });
 
+    let isCompact = false;
+    let preCompactBounds = null;
+
     ipcMain.handle('window-minimize', () => {
-        if (!mainWindow.isDestroyed()) {
-            mainWindow.minimize();
+        if (!mainWindow || mainWindow.isDestroyed()) return { success: false };
+
+        if (isCompact) {
+            // Restore back to normal size
+            isCompact = false;
+            mainWindow.setMinimumSize(MIN_WINDOW_SIZE.width, MIN_WINDOW_SIZE.height);
+            if (preCompactBounds) {
+                mainWindow.setBounds(preCompactBounds);
+            } else {
+                mainWindow.setSize(DEFAULT_MAIN_WINDOW_SIZE.width, DEFAULT_MAIN_WINDOW_SIZE.height);
+            }
+            sendToRenderer('compact-mode-changed', false);
+            return { success: true, isCompact: false };
+        } else {
+            // Minimize a bit to compact mini overlay
+            preCompactBounds = mainWindow.getBounds();
+            const currentDisplay = screen.getDisplayMatching(preCompactBounds);
+            const workArea = currentDisplay.workArea;
+
+            const compactWidth = 520;
+            const compactHeight = 280;
+
+            const newX = Math.min(preCompactBounds.x, workArea.x + workArea.width - compactWidth);
+            const newY = Math.min(preCompactBounds.y, workArea.y + workArea.height - compactHeight);
+
+            isCompact = true;
+            mainWindow.setMinimumSize(320, 160);
+            mainWindow.setBounds({
+                x: Math.max(workArea.x, newX),
+                y: Math.max(workArea.y, newY),
+                width: compactWidth,
+                height: compactHeight,
+            });
+            sendToRenderer('compact-mode-changed', true);
+            return { success: true, isCompact: true };
         }
     });
 
