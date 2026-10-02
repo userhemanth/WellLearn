@@ -56,45 +56,92 @@ export class WellLearnApp extends LitElement {
             flex: 1;
             height: 100%;
             -webkit-app-region: drag;
+            pointer-events: auto;
         }
 
         .top-drag-bar.hidden {
             display: none;
         }
 
-        .traffic-lights {
+        .window-controls {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 0 var(--space-md);
+            gap: 6px;
+            padding: 0 12px;
             height: 100%;
             -webkit-app-region: no-drag;
+            pointer-events: auto;
         }
 
-        .traffic-light {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: none;
+        .window-controls.live-controls {
+            padding: 0;
+            gap: 4px;
+        }
+
+        .win-btn {
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.04);
             cursor: pointer;
             padding: 0;
-            transition: opacity 0.15s ease;
+            transition: all 0.15s ease;
         }
 
-        .traffic-light:hover {
-            opacity: 0.8;
+        .win-btn svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.1s ease;
         }
 
-        .traffic-light.close {
-            background: #ff5f57;
+        .win-btn:active svg {
+            transform: scale(0.9);
         }
 
-        .traffic-light.minimize {
-            background: #febc2e;
+        .win-btn.hide {
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.2);
+            background: rgba(56, 189, 248, 0.08);
         }
 
-        .traffic-light.maximize {
-            background: #28c840;
+        .win-btn.hide:hover {
+            background: rgba(56, 189, 248, 0.25);
+            border-color: #38bdf8;
+            color: #7dd3fc;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .win-btn.minimize {
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.2);
+            background: rgba(251, 191, 36, 0.08);
+        }
+
+        .win-btn.minimize:hover {
+            background: rgba(251, 191, 36, 0.25);
+            border-color: #fbbf24;
+            color: #fde68a;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .win-btn.close {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.2);
+            background: rgba(248, 113, 113, 0.08);
+        }
+
+        .win-btn.close:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+            transform: translateY(-1px);
         }
 
         .sidebar {
@@ -104,7 +151,7 @@ export class WellLearnApp extends LitElement {
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            padding: 42px 0 var(--space-md) 0;
+            padding: 16px 0 var(--space-md) 0;
             transition:
                 width var(--transition),
                 min-width var(--transition),
@@ -908,7 +955,25 @@ export class WellLearnApp extends LitElement {
                     ${this.statusText ? html`<span class="live-bar-text">${this.statusText}</span>` : ''}
                     <span class="live-bar-text">${this.getElapsedTime()}</span>
                     ${this._isClickThrough ? html`<span class="live-bar-text">[click through]</span>` : ''}
-                    <span class="live-bar-text clickable" @click=${() => this.handleHideToggle()}>[hide]</span>
+                    <div class="window-controls live-controls">
+                        <button class="win-btn hide" @click=${() => this.handleHideToggle()} title="Hide (Ctrl+\)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                        <button class="win-btn minimize" @click=${() => this._handleMinimize()} title="Minimize">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                        <button class="win-btn close" @click=${() => this.handleClose()} title="End session">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -925,12 +990,26 @@ export class WellLearnApp extends LitElement {
         return html`
             <div class="app-shell">
                 <div class="top-drag-bar ${isLive ? 'hidden' : ''}">
-                    <div class="traffic-lights">
-                        <button class="traffic-light close" @click=${() => this.handleClose()} title="Close"></button>
-                        <button class="traffic-light minimize" @click=${() => this._handleMinimize()} title="Minimize"></button>
-                        <button class="traffic-light maximize" title="Maximize"></button>
-                    </div>
                     <div class="drag-region"></div>
+                    <div class="window-controls">
+                        <button class="win-btn hide" @click=${() => this.handleHideToggle()} title="Hide (Ctrl+\)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                        <button class="win-btn minimize" @click=${() => this._handleMinimize()} title="Minimize">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                        <button class="win-btn close" @click=${() => this.handleClose()} title="Close">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 ${this.renderSidebar()}
                 <div class="content">
