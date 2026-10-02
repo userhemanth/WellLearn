@@ -315,13 +315,7 @@ async function initializeGeminiSession(apiKey, customPrompt = '', profile = 'int
                 responseModalities: [Modality.AUDIO],
                 outputAudioTranscription: {},
                 tools: enabledTools.length > 0 ? enabledTools : undefined,
-                // Enable speaker diarization
-                inputAudioTranscription: {
-                    enableSpeakerDiarization: true,
-                    minSpeakerCount: 2,
-                    maxSpeakerCount: 2,
-                },
-                contextWindowCompression: { slidingWindow: {} },
+                inputAudioTranscription: {},
                 speechConfig: { languageCode: language },
                 systemInstruction: {
                     parts: [{ text: systemPrompt }],
