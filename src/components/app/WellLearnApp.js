@@ -377,6 +377,81 @@ export class WellLearnApp extends LitElement {
             z-index: 1;
         }
 
+        /* Listening / Mute Interviewer Toggle Button */
+        .listen-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px 2px 4px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-app-region: no-drag;
+            user-select: none;
+        }
+
+        .listen-toggle-btn.listening {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+        }
+
+        .listen-toggle-btn.listening:hover {
+            background: rgba(34, 197, 94, 0.22);
+            border-color: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .listen-toggle-btn.muted {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        .listen-toggle-btn.muted:hover {
+            background: rgba(239, 68, 68, 0.22);
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .listen-icon-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .listen-icon-circle.green {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1.5px solid #16a34a;
+        }
+
+        .listen-icon-circle.red {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1.5px solid #ef4444;
+        }
+
+        .listen-toggle-label {
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .listen-key-badge {
+            background: rgba(255, 255, 255, 0.09);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-family: var(--font-mono, monospace);
+            letter-spacing: 0.02em;
+            opacity: 0.85;
+        }
+
         .live-bar-text {
             font-size: var(--font-size-xs);
             color: var(--text-muted);
@@ -454,6 +529,7 @@ export class WellLearnApp extends LitElement {
         _updateAvailable: { state: true },
         _whisperDownloading: { state: true },
         _isCompact: { state: true },
+        _isListening: { state: true },
     };
 
     constructor() {
@@ -464,6 +540,7 @@ export class WellLearnApp extends LitElement {
         this.isRecording = false;
         this.sessionActive = false;
         this._isCompact = false;
+        this._isListening = true;
         this.selectedProfile = 'interview';
         this.selectedLanguage = 'en-US';
         this.selectedScreenshotInterval = '5';
@@ -547,6 +624,11 @@ export class WellLearnApp extends LitElement {
                     if (this.currentView !== 'assistant') {
                         this.handleStart();
                     }
+                    return;
+                }
+                if (key === 'l') {
+                    e.preventDefault();
+                    this.handleToggleListening();
                     return;
                 }
             }
@@ -658,6 +740,14 @@ export class WellLearnApp extends LitElement {
         } else {
             this.navigate('main');
         }
+    }
+
+    handleToggleListening() {
+        this._isListening = !this._isListening;
+        if (typeof wellLearn !== 'undefined' && typeof wellLearn.setAudioListeningMuted === 'function') {
+            wellLearn.setAudioListeningMuted(!this._isListening);
+        }
+        this.requestUpdate();
     }
 
     async handleClose() {
@@ -986,6 +1076,33 @@ export class WellLearnApp extends LitElement {
                 </div>
                 <div class="live-bar-center">${profileLabels[this.selectedProfile] || 'Session'}</div>
                 <div class="live-bar-right">
+                    <!-- Listening Toggle Badge (Green for listening, Red for muted) -->
+                    <button
+                        class="listen-toggle-btn ${this._isListening ? 'listening' : 'muted'}"
+                        @click=${() => this.handleToggleListening()}
+                        title="${this._isListening ? 'Listening to Interviewer (Ctrl+L) · Click to mute' : 'Muted - Not Listening (Ctrl+L) · Click to listen'}"
+                    >
+                        <div class="listen-icon-circle ${this._isListening ? 'green' : 'red'}">
+                            ${this._isListening
+                                ? html`<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>`
+                                : html`<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="1" y1="1" x2="23" y2="23" stroke-width="2.5"></line>
+                                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+                                    <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>`
+                            }
+                        </div>
+                        <span class="listen-toggle-label">${this._isListening ? 'Listening' : 'Muted'}</span>
+                        <span class="listen-key-badge">Ctrl+L</span>
+                    </button>
+
                     ${this.statusText ? html`<span class="live-bar-text">${this.statusText}</span>` : ''}
                     <span class="live-bar-text">${this.getElapsedTime()}</span>
                     ${this._isClickThrough ? html`<span class="live-bar-text">[click through]</span>` : ''}

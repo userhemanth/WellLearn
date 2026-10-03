@@ -742,10 +742,12 @@ export class MainView extends LitElement {
 
     async _loadFromStorage() {
         try {
-            const config = await wellLearn.storage.getConfig();
-            this._geminiKey = (await wellLearn.storage.getApiKey().catch(() => '')) || '';
-            this._geminiLiveModel = config.geminiLiveModel || 'gemini-3.1-flash-live-preview';
-            this.requestUpdate();
+            if (typeof wellLearn !== 'undefined' && wellLearn.storage) {
+                const config = await wellLearn.storage.getConfig();
+                this._geminiKey = (await wellLearn.storage.getApiKey().catch(() => '')) || '';
+                this._geminiLiveModel = config?.geminiLiveModel || 'gemini-3.1-flash-live-preview';
+                this.requestUpdate();
+            }
         } catch (e) {
             console.error('Error loading MainView storage:', e);
         }
@@ -917,6 +919,7 @@ export class MainView extends LitElement {
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
         const shortcutKey = isMac ? 'Cmd+O' : 'Ctrl+O';
         const homeShortcut = isMac ? 'Cmd+H' : 'Ctrl+H';
+        const listenShortcut = isMac ? 'Cmd+L' : 'Ctrl+L';
 
         return html`
             <div class="tool-shortcuts-hint">
@@ -932,6 +935,13 @@ export class MainView extends LitElement {
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                     <span>${homeShortcut} Home</span>
+                </span>
+                <span class="tool-shortcut-item" title="Shortcut to mute / unmute interviewer listening">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    </svg>
+                    <span>${listenShortcut} Listen</span>
                 </span>
             </div>
             <button

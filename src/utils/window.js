@@ -98,6 +98,7 @@ function getDefaultKeybinds() {
         moveRight: isMac ? 'Alt+Right' : 'Ctrl+Right',
         toggleVisibility: isMac ? 'Cmd+\\' : 'Ctrl+\\',
         toggleClickThrough: isMac ? 'Cmd+M' : 'Ctrl+M',
+        toggleListening: isMac ? 'Cmd+L' : 'Ctrl+L',
         openInterview: isMac ? 'Cmd+O' : 'Ctrl+O',
         returnHome: isMac ? 'Cmd+H' : 'Ctrl+H',
         nextStep: isMac ? 'Cmd+Enter' : 'Ctrl+Enter',
@@ -197,8 +198,10 @@ function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessi
                 const isMac = process.platform === 'darwin';
                 const shortcutKey = isMac ? 'cmd+o' : 'ctrl+o';
                 mainWindow.webContents.executeJavaScript(`
-                    wellLearn.handleShortcut('${shortcutKey}');
-                `);
+                    if (typeof wellLearn !== 'undefined' && typeof wellLearn.handleShortcut === 'function') {
+                        wellLearn.handleShortcut('${shortcutKey}');
+                    }
+                `).catch(err => console.error('Error executing openInterview shortcut:', err));
             });
             console.log(`Registered openInterview: ${keybinds.openInterview}`);
         } catch (error) {
@@ -214,12 +217,33 @@ function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessi
                 const isMac = process.platform === 'darwin';
                 const shortcutKey = isMac ? 'cmd+h' : 'ctrl+h';
                 mainWindow.webContents.executeJavaScript(`
-                    wellLearn.handleShortcut('${shortcutKey}');
-                `);
+                    if (typeof wellLearn !== 'undefined' && typeof wellLearn.handleShortcut === 'function') {
+                        wellLearn.handleShortcut('${shortcutKey}');
+                    }
+                `).catch(err => console.error('Error executing returnHome shortcut:', err));
             });
             console.log(`Registered returnHome: ${keybinds.returnHome}`);
         } catch (error) {
             console.error(`Failed to register returnHome (${keybinds.returnHome}):`, error);
+        }
+    }
+
+    // Register toggle listening shortcut
+    if (keybinds.toggleListening) {
+        try {
+            globalShortcut.register(keybinds.toggleListening, () => {
+                console.log('Toggle listening shortcut triggered');
+                const isMac = process.platform === 'darwin';
+                const shortcutKey = isMac ? 'cmd+l' : 'ctrl+l';
+                mainWindow.webContents.executeJavaScript(`
+                    if (typeof wellLearn !== 'undefined' && typeof wellLearn.handleShortcut === 'function') {
+                        wellLearn.handleShortcut('${shortcutKey}');
+                    }
+                `).catch(err => console.error('Error executing toggleListening shortcut:', err));
+            });
+            console.log(`Registered toggleListening: ${keybinds.toggleListening}`);
+        } catch (error) {
+            console.error(`Failed to register toggleListening (${keybinds.toggleListening}):`, error);
         }
     }
 
@@ -233,10 +257,11 @@ function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessi
                     const isMac = process.platform === 'darwin';
                     const shortcutKey = isMac ? 'cmd+enter' : 'ctrl+enter';
 
-                    // Use the new handleShortcut function
                     mainWindow.webContents.executeJavaScript(`
-                        wellLearn.handleShortcut('${shortcutKey}');
-                    `);
+                        if (typeof wellLearn !== 'undefined' && typeof wellLearn.handleShortcut === 'function') {
+                            wellLearn.handleShortcut('${shortcutKey}');
+                        }
+                    `).catch(err => console.error('Error executing nextStep shortcut:', err));
                 } catch (error) {
                     console.error('Error handling next step shortcut:', error);
                 }
