@@ -21,6 +21,7 @@ function createWindow(sendToRenderer, geminiSessionRef) {
         transparent: true,
         hasShadow: false,
         alwaysOnTop: process.platform === 'win32',
+        skipTaskbar: true,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false, // TODO: change to true
@@ -48,13 +49,11 @@ function createWindow(sendToRenderer, geminiSessionRef) {
         mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
     }
 
-    // Show in Windows taskbar so the application never disappears
-    if (process.platform === 'win32') {
-        try {
-            mainWindow.setSkipTaskbar(false);
-        } catch (error) {
-            console.warn('Could not set taskbar visibility:', error.message);
-        }
+    // Hide from taskbar so the application icon is not shown on the taskbar
+    try {
+        mainWindow.setSkipTaskbar(true);
+    } catch (error) {
+        console.warn('Could not set taskbar visibility:', error.message);
     }
 
     // Hide from Mission Control on macOS
