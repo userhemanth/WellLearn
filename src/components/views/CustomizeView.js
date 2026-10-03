@@ -307,6 +307,7 @@ export class CustomizeView extends LitElement {
         return {
             openInterview: isMac ? 'Cmd+O' : 'Ctrl+O',
             returnHome: isMac ? 'Cmd+H' : 'Ctrl+H',
+            closeApp: isMac ? 'Cmd+Shift+Tab' : 'Ctrl+Shift+Tab',
             toggleListening: isMac ? 'Cmd+L' : 'Ctrl+L',
             moveUp: isMac ? 'Alt+Up' : 'Ctrl+Up',
             moveDown: isMac ? 'Alt+Down' : 'Ctrl+Down',
@@ -324,6 +325,7 @@ export class CustomizeView extends LitElement {
 
     getKeybindActions() {
         return [
+            { key: 'closeApp', name: 'Close Entire App Directly', description: 'Instantly exit and quit application from any view (Ctrl+Shift+Tab)' },
             { key: 'openInterview', name: 'Open Interview / Start Session', description: 'Start session and enter interview mode (Ctrl+O)' },
             { key: 'returnHome', name: 'Return to Home', description: 'Exit interview and return to home page (Ctrl+H)' },
             { key: 'toggleListening', name: 'Toggle Listening / Mute Interviewer', description: 'Mute or unmute listening to interviewer (Ctrl+L)' },

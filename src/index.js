@@ -247,6 +247,15 @@ function setupGeneralIpcHandlers() {
     ipcMain.handle('quit-application', async event => {
         try {
             stopMacOSAudioCapture();
+            if (geminiSessionRef && geminiSessionRef.current) {
+                try {
+                    geminiSessionRef.current.close();
+                } catch (e) {}
+                geminiSessionRef.current = null;
+            }
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.destroy();
+            }
             app.quit();
             return { success: true };
         } catch (error) {

@@ -934,6 +934,7 @@ export class MainView extends LitElement {
         const homeShortcut = isMac ? 'Cmd+H' : 'Ctrl+H';
         const listenShortcut = isMac ? 'Cmd+L' : 'Ctrl+L';
         const clickthruShortcut = isMac ? 'Cmd+M' : 'Ctrl+M';
+        const closeShortcut = isMac ? 'Cmd+Shift+Tab' : 'Ctrl+Shift+Tab';
 
         return html`
             <div class="tool-shortcuts-hint">
@@ -966,6 +967,14 @@ export class MainView extends LitElement {
                         <line x1="18" y1="9" x2="18.01" y2="9"></line>
                     </svg>
                     <span>${clickthruShortcut} Click-thru</span>
+                </span>
+                <span class="tool-shortcut-item" title="Shortcut to completely close application directly from anywhere">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                    <span>${closeShortcut} Exit</span>
                 </span>
             </div>
             <button

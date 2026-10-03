@@ -802,6 +802,15 @@ function handleShortcut(shortcutKey) {
             if (app && typeof app.handleToggleClickThrough === 'function') {
                 app.handleToggleClickThrough();
             }
+        } else if (key === 'ctrl+shift+tab' || key === 'cmd+shift+tab') {
+            if (app && typeof app.handleDirectQuit === 'function') {
+                app.handleDirectQuit();
+            } else if (window.require) {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.invoke('quit-application');
+            } else {
+                window.close();
+            }
         }
     } catch (error) {
         console.error('Error handling shortcut:', shortcutKey, error);

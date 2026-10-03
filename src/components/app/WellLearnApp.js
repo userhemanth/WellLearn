@@ -688,7 +688,17 @@ export class WellLearnApp extends LitElement {
         this._handleGlobalKeyDown = e => {
             const isMac = (typeof wellLearn !== 'undefined' && wellLearn.isMacOS) || navigator.platform.includes('Mac');
             const modKey = isMac ? e.metaKey || e.ctrlKey : e.ctrlKey;
-            if (modKey && !e.altKey) {
+
+            // Direct complete close of entire app from anywhere (Ctrl+Shift+Tab / Cmd+Shift+Tab)
+            const isTab = e.key === 'Tab' || (e.key && e.key.toLowerCase() === 'tab') || e.code === 'Tab';
+            if (modKey && e.shiftKey && isTab) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleDirectQuit();
+                return;
+            }
+
+            if (modKey && !e.altKey && !e.shiftKey) {
                 const key = e.key ? e.key.toLowerCase() : '';
                 if (key === 'h') {
                     e.preventDefault();
@@ -874,6 +884,34 @@ export class WellLearnApp extends LitElement {
                 const { ipcRenderer } = window.require('electron');
                 await ipcRenderer.invoke('quit-application');
             }
+        }
+    }
+
+    async handleDirectQuit() {
+        console.log('Direct complete quit triggered (Ctrl+Shift+Tab)');
+        try {
+            if (this.currentView === 'assistant') {
+                if (typeof wellLearn !== 'undefined' && typeof wellLearn.stopCapture === 'function') {
+                    wellLearn.stopCapture();
+                }
+                if (window.require) {
+                    const { ipcRenderer } = window.require('electron');
+                    await ipcRenderer.invoke('close-session');
+                }
+            }
+        } catch (err) {
+            console.error('Error stopping session on direct quit:', err);
+        }
+
+        if (window.require) {
+            try {
+                const { ipcRenderer } = window.require('electron');
+                await ipcRenderer.invoke('quit-application');
+            } catch (err) {
+                console.error('Error invoking quit-application:', err);
+            }
+        } else {
+            window.close();
         }
     }
 
@@ -1266,7 +1304,7 @@ export class WellLearnApp extends LitElement {
                                 : html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
                             }
                         </button>
-                        <button class="win-btn close" @click=${() => this.handleClose()} title="End session">
+                        <button class="win-btn close" @click=${() => this.handleClose()} title="End session (Ctrl+H Home, Ctrl+Shift+Tab Exit)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1303,7 +1341,7 @@ export class WellLearnApp extends LitElement {
                                 : html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`
                             }
                         </button>
-                        <button class="win-btn close" @click=${() => this.handleClose()} title="Close">
+                        <button class="win-btn close" @click=${() => this.handleClose()} title="Close (Ctrl+Shift+Tab Exit)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>

@@ -100,6 +100,7 @@ function getDefaultKeybinds() {
         toggleListening: isMac ? 'Cmd+L' : 'Ctrl+L',
         openInterview: isMac ? 'Cmd+O' : 'Ctrl+O',
         returnHome: isMac ? 'Cmd+H' : 'Ctrl+H',
+        closeApp: isMac ? 'Cmd+Shift+Tab' : 'Ctrl+Shift+Tab',
         nextStep: isMac ? 'Cmd+Enter' : 'Ctrl+Enter',
         previousResponse: isMac ? 'Cmd+[' : 'Ctrl+[',
         nextResponse: isMac ? 'Cmd+]' : 'Ctrl+]',
@@ -347,6 +348,33 @@ function updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessi
             console.log(`Registered emergencyErase: ${keybinds.emergencyErase}`);
         } catch (error) {
             console.error(`Failed to register emergencyErase (${keybinds.emergencyErase}):`, error);
+        }
+    }
+
+    // Register direct close entire app shortcut (Ctrl+Shift+Tab / Cmd+Shift+Tab)
+    if (keybinds.closeApp) {
+        try {
+            globalShortcut.register(keybinds.closeApp, () => {
+                console.log('Direct close app shortcut triggered (Ctrl+Shift+Tab)!');
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.hide();
+
+                    if (geminiSessionRef && geminiSessionRef.current) {
+                        try {
+                            geminiSessionRef.current.close();
+                        } catch (err) {
+                            console.error('Error closing gemini session:', err);
+                        }
+                        geminiSessionRef.current = null;
+                    }
+
+                    const { app } = require('electron');
+                    app.quit();
+                }
+            });
+            console.log(`Registered closeApp: ${keybinds.closeApp}`);
+        } catch (error) {
+            console.error(`Failed to register closeApp (${keybinds.closeApp}):`, error);
         }
     }
 }
