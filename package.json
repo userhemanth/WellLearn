@@ -1,7 +1,7 @@
-﻿{
+{
     "name": "welllearn",
     "productName": "welllearn",
-    "version": "0.8.0",
+    "version": "1.0.0",
     "description": "welllearn",
     "main": "src/index.js",
     "scripts": {
