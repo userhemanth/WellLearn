@@ -1009,9 +1009,6 @@ export class MainView extends LitElement {
                         @input=${e => this._saveGeminiKey(e.target.value)}
                         class=${this._keyError ? 'error' : ''}
                     />
-                    <div class="form-hint">
-                        <span class="link" @click=${() => this.onExternalLink('https://aistudio.google.com/apikey')}>Get free Gemini API key</span>
-                    </div>
                 </div>
 
                 ${this._renderStartButton()}
