@@ -243,9 +243,22 @@ export class CustomizeView extends LitElement {
                     model = 'gemini-3.1-flash-live-preview';
                     await wellLearn.storage.updateConfig('geminiLiveModel', model);
                 }
-                this.geminiLiveModel = model;
                 if (keybinds) {
-                    this.keybinds = { ...this.getDefaultKeybinds(), ...keybinds };
+                    const defaultKeybinds = this.getDefaultKeybinds();
+                    if (keybinds.moveUp === 'Ctrl+Up' || keybinds.moveUp === 'Alt+Up') {
+                        keybinds.moveUp = defaultKeybinds.moveUp;
+                        keybinds.moveDown = defaultKeybinds.moveDown;
+                        keybinds.moveLeft = defaultKeybinds.moveLeft;
+                        keybinds.moveRight = defaultKeybinds.moveRight;
+                    }
+                    if (keybinds.scrollUp === 'Ctrl+Shift+Up' || keybinds.scrollUp === 'Cmd+Shift+Up') {
+                        keybinds.scrollUp = defaultKeybinds.scrollUp;
+                        keybinds.scrollDown = defaultKeybinds.scrollDown;
+                    }
+                    if (!keybinds.closeApp) {
+                        keybinds.closeApp = defaultKeybinds.closeApp;
+                    }
+                    this.keybinds = { ...defaultKeybinds, ...keybinds };
                 }
                 this.updateBackgroundAppearance();
                 this.updateFontSize();
@@ -309,37 +322,37 @@ export class CustomizeView extends LitElement {
             returnHome: isMac ? 'Cmd+H' : 'Ctrl+H',
             closeApp: isMac ? 'Cmd+Shift+Tab' : 'Ctrl+Shift+Tab',
             toggleListening: isMac ? 'Cmd+L' : 'Ctrl+L',
-            moveUp: isMac ? 'Alt+Up' : 'Ctrl+Up',
-            moveDown: isMac ? 'Alt+Down' : 'Ctrl+Down',
-            moveLeft: isMac ? 'Alt+Left' : 'Ctrl+Left',
-            moveRight: isMac ? 'Alt+Right' : 'Ctrl+Right',
+            moveUp: isMac ? 'Cmd+Shift+Up' : 'Ctrl+Shift+Up',
+            moveDown: isMac ? 'Cmd+Shift+Down' : 'Ctrl+Shift+Down',
+            moveLeft: isMac ? 'Cmd+Shift+Left' : 'Ctrl+Shift+Left',
+            moveRight: isMac ? 'Cmd+Shift+Right' : 'Ctrl+Shift+Right',
             toggleVisibility: isMac ? 'Cmd+\\' : 'Ctrl+\\',
             toggleClickThrough: isMac ? 'Cmd+M' : 'Ctrl+M',
             nextStep: isMac ? 'Cmd+Enter' : 'Ctrl+Enter',
             previousResponse: isMac ? 'Cmd+[' : 'Ctrl+[',
             nextResponse: isMac ? 'Cmd+]' : 'Ctrl+]',
-            scrollUp: isMac ? 'Cmd+Shift+Up' : 'Ctrl+Shift+Up',
-            scrollDown: isMac ? 'Cmd+Shift+Down' : 'Ctrl+Shift+Down',
+            scrollUp: isMac ? 'Cmd+Up' : 'Ctrl+Up',
+            scrollDown: isMac ? 'Cmd+Down' : 'Ctrl+Down',
         };
     }
 
     getKeybindActions() {
         return [
             { key: 'closeApp', name: 'Close Entire App Directly', description: 'Instantly exit and quit application from any view (Ctrl+Shift+Tab)' },
+            { key: 'scrollUp', name: 'Scroll Response Up', description: 'Scroll response content upward (Ctrl+Up)' },
+            { key: 'scrollDown', name: 'Scroll Response Down', description: 'Scroll response content downward (Ctrl+Down)' },
+            { key: 'moveUp', name: 'Move Window Up', description: 'Move the app window up on display (Ctrl+Shift+Up)' },
+            { key: 'moveDown', name: 'Move Window Down', description: 'Move the app window down on display (Ctrl+Shift+Down)' },
+            { key: 'moveLeft', name: 'Move Window Left', description: 'Move the app window left on display (Ctrl+Shift+Left)' },
+            { key: 'moveRight', name: 'Move Window Right', description: 'Move the app window right on display (Ctrl+Shift+Right)' },
             { key: 'openInterview', name: 'Open Interview / Start Session', description: 'Start session and enter interview mode (Ctrl+O)' },
             { key: 'returnHome', name: 'Return to Home', description: 'Exit interview and return to home page (Ctrl+H)' },
             { key: 'toggleListening', name: 'Toggle Listening / Mute Interviewer', description: 'Mute or unmute listening to interviewer (Ctrl+L)' },
-            { key: 'moveUp', name: 'Move Window Up', description: 'Move the app window up' },
-            { key: 'moveDown', name: 'Move Window Down', description: 'Move the app window down' },
-            { key: 'moveLeft', name: 'Move Window Left', description: 'Move the app window left' },
-            { key: 'moveRight', name: 'Move Window Right', description: 'Move the app window right' },
             { key: 'toggleVisibility', name: 'Toggle Visibility', description: 'Show or hide the app window' },
             { key: 'toggleClickThrough', name: 'Toggle Click-through', description: 'Enable or disable click-through mode' },
             { key: 'nextStep', name: 'Capture Screen & Analyze', description: 'Take screenshot and ask AI for analysis (Ctrl+Enter)' },
             { key: 'previousResponse', name: 'Previous Response', description: 'Move to previous AI response' },
             { key: 'nextResponse', name: 'Next Response', description: 'Move to next AI response' },
-            { key: 'scrollUp', name: 'Scroll Response Up', description: 'Scroll response content upward' },
-            { key: 'scrollDown', name: 'Scroll Response Down', description: 'Scroll response content downward' },
         ];
     }
 

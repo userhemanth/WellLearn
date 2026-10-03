@@ -76,7 +76,22 @@ function createWindow(sendToRenderer, geminiSessionRef) {
             // Load keybinds from storage
             const savedKeybinds = storage.getKeybinds();
             if (savedKeybinds) {
+                // Migrate any old default movement and scroll keybinds to new defaults
+                if (savedKeybinds.moveUp === 'Ctrl+Up' || savedKeybinds.moveUp === 'Alt+Up') {
+                    savedKeybinds.moveUp = defaultKeybinds.moveUp;
+                    savedKeybinds.moveDown = defaultKeybinds.moveDown;
+                    savedKeybinds.moveLeft = defaultKeybinds.moveLeft;
+                    savedKeybinds.moveRight = defaultKeybinds.moveRight;
+                }
+                if (savedKeybinds.scrollUp === 'Ctrl+Shift+Up' || savedKeybinds.scrollUp === 'Cmd+Shift+Up') {
+                    savedKeybinds.scrollUp = defaultKeybinds.scrollUp;
+                    savedKeybinds.scrollDown = defaultKeybinds.scrollDown;
+                }
+                if (!savedKeybinds.closeApp) {
+                    savedKeybinds.closeApp = defaultKeybinds.closeApp;
+                }
                 keybinds = { ...defaultKeybinds, ...savedKeybinds };
+                storage.setKeybinds(keybinds);
             }
 
             updateGlobalShortcuts(keybinds, mainWindow, sendToRenderer, geminiSessionRef);
@@ -91,10 +106,10 @@ function createWindow(sendToRenderer, geminiSessionRef) {
 function getDefaultKeybinds() {
     const isMac = process.platform === 'darwin';
     return {
-        moveUp: isMac ? 'Alt+Up' : 'Ctrl+Up',
-        moveDown: isMac ? 'Alt+Down' : 'Ctrl+Down',
-        moveLeft: isMac ? 'Alt+Left' : 'Ctrl+Left',
-        moveRight: isMac ? 'Alt+Right' : 'Ctrl+Right',
+        moveUp: isMac ? 'Cmd+Shift+Up' : 'Ctrl+Shift+Up',
+        moveDown: isMac ? 'Cmd+Shift+Down' : 'Ctrl+Shift+Down',
+        moveLeft: isMac ? 'Cmd+Shift+Left' : 'Ctrl+Shift+Left',
+        moveRight: isMac ? 'Cmd+Shift+Right' : 'Ctrl+Shift+Right',
         toggleVisibility: isMac ? 'Cmd+\\' : 'Ctrl+\\',
         toggleClickThrough: isMac ? 'Cmd+M' : 'Ctrl+M',
         toggleListening: isMac ? 'Cmd+L' : 'Ctrl+L',
@@ -104,8 +119,8 @@ function getDefaultKeybinds() {
         nextStep: isMac ? 'Cmd+Enter' : 'Ctrl+Enter',
         previousResponse: isMac ? 'Cmd+[' : 'Ctrl+[',
         nextResponse: isMac ? 'Cmd+]' : 'Ctrl+]',
-        scrollUp: isMac ? 'Cmd+Shift+Up' : 'Ctrl+Shift+Up',
-        scrollDown: isMac ? 'Cmd+Shift+Down' : 'Ctrl+Shift+Down',
+        scrollUp: isMac ? 'Cmd+Up' : 'Ctrl+Up',
+        scrollDown: isMac ? 'Cmd+Down' : 'Ctrl+Down',
         emergencyErase: isMac ? 'Cmd+Shift+E' : 'Ctrl+Shift+E',
     };
 }
@@ -409,6 +424,21 @@ function setupWindowIpcHandlers(mainWindow, sendToRenderer, geminiSessionRef) {
         }
         mainWindow.webContents.send('click-through-toggled', mouseEventsIgnored);
         return { success: true, isClickThrough: mouseEventsIgnored };
+    });
+
+    ipcMain.handle('window-move', (event, direction) => {
+        if (!mainWindow || mainWindow.isDestroyed() || !mainWindow.isVisible()) return { success: false };
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const { width, height } = primaryDisplay.workAreaSize;
+        const moveIncrement = Math.floor(Math.min(width, height) * 0.1);
+        const [currentX, currentY] = mainWindow.getPosition();
+
+        if (direction === 'up') mainWindow.setPosition(currentX, currentY - moveIncrement);
+        else if (direction === 'down') mainWindow.setPosition(currentX, currentY + moveIncrement);
+        else if (direction === 'left') mainWindow.setPosition(currentX - moveIncrement, currentY);
+        else if (direction === 'right') mainWindow.setPosition(currentX + moveIncrement, currentY);
+
+        return { success: true };
     });
 
     let isCompact = false;

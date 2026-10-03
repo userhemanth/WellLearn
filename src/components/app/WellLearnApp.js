@@ -698,8 +698,53 @@ export class WellLearnApp extends LitElement {
                 return;
             }
 
+            // Ctrl+Shift+Arrows (or Cmd+Shift+Arrows on Mac): Move application body across display
+            if (modKey && e.shiftKey && !e.altKey) {
+                const code = e.code || '';
+                const key = e.key || '';
+                let dir = null;
+                if (code === 'ArrowUp' || key === 'ArrowUp') dir = 'up';
+                else if (code === 'ArrowDown' || key === 'ArrowDown') dir = 'down';
+                else if (code === 'ArrowLeft' || key === 'ArrowLeft') dir = 'left';
+                else if (code === 'ArrowRight' || key === 'ArrowRight') dir = 'right';
+
+                if (dir) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.require) {
+                        const { ipcRenderer } = window.require('electron');
+                        ipcRenderer.invoke('window-move', dir);
+                    }
+                    return;
+                }
+            }
+
             if (modKey && !e.altKey && !e.shiftKey) {
+                const code = e.code || '';
                 const key = e.key ? e.key.toLowerCase() : '';
+
+                // Ctrl+Up / Ctrl+Down: Scroll response content in assistant view
+                if (code === 'ArrowUp' || key === 'arrowup') {
+                    if (this.currentView === 'assistant') {
+                        e.preventDefault();
+                        const assistant = this.shadowRoot.querySelector('assistant-view');
+                        if (assistant && typeof assistant.scrollResponseUp === 'function') {
+                            assistant.scrollResponseUp();
+                        }
+                    }
+                    return;
+                }
+                if (code === 'ArrowDown' || key === 'arrowdown') {
+                    if (this.currentView === 'assistant') {
+                        e.preventDefault();
+                        const assistant = this.shadowRoot.querySelector('assistant-view');
+                        if (assistant && typeof assistant.scrollResponseDown === 'function') {
+                            assistant.scrollResponseDown();
+                        }
+                    }
+                    return;
+                }
+
                 if (key === 'h') {
                     e.preventDefault();
                     this.handleReturnHome();
