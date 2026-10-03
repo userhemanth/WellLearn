@@ -785,9 +785,7 @@ function handleShortcut(shortcutKey) {
         const currentView = app?.currentView || (typeof wellLearn !== 'undefined' ? wellLearn.getCurrentView() : null);
 
         if (key === 'ctrl+enter' || key === 'cmd+enter') {
-            if (currentView === 'main') {
-                app?.handleStart?.();
-            } else {
+            if (currentView === 'assistant') {
                 captureManualScreenshot();
             }
         } else if (key === 'ctrl+o' || key === 'cmd+o') {

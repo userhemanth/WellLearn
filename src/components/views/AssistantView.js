@@ -695,7 +695,11 @@ export class AssistantView extends LitElement {
                         @keydown=${this.handleTextKeydown}
                     />
                 </div>
-                <button class="analyze-btn ${this.isAnalyzing ? 'analyzing' : ''}" @click=${this.handleScreenAnswer}>
+                <button
+                    class="analyze-btn ${this.isAnalyzing ? 'analyzing' : ''}"
+                    @click=${this.handleScreenAnswer}
+                    title="Analyze Screen / Capture (Ctrl+Enter)"
+                >
                     <canvas class="analyze-canvas"></canvas>
                     <span class="analyze-btn-content">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24">

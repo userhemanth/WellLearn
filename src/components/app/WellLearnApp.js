@@ -712,6 +712,15 @@ export class WellLearnApp extends LitElement {
                     this.handleToggleClickThrough();
                     return;
                 }
+                if (key === 'enter') {
+                    if (this.currentView === 'assistant') {
+                        e.preventDefault();
+                        if (typeof window !== 'undefined' && typeof window.captureManualScreenshot === 'function') {
+                            window.captureManualScreenshot();
+                        }
+                    }
+                    return;
+                }
             }
         };
         window.addEventListener('keydown', this._handleGlobalKeyDown);
