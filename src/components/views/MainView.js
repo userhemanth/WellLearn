@@ -753,7 +753,12 @@ export class MainView extends LitElement {
             if (typeof wellLearn !== 'undefined' && wellLearn.storage) {
                 const config = await wellLearn.storage.getConfig();
                 this._geminiKey = (await wellLearn.storage.getApiKey().catch(() => '')) || '';
-                this._geminiLiveModel = config?.geminiLiveModel || 'gemini-3.1-flash-live-preview';
+                let model = config?.geminiLiveModel || 'gemini-3.1-flash-live-preview';
+                if (model === 'gemini-2.0-flash-exp' || model === 'gemini-2.0-flash-realtime-exp') {
+                    model = 'gemini-3.1-flash-live-preview';
+                    await wellLearn.storage.updateConfig('geminiLiveModel', model);
+                }
+                this._geminiLiveModel = model;
                 this.requestUpdate();
             }
         } catch (e) {
@@ -1021,10 +1026,8 @@ export class MainView extends LitElement {
                                 .value=${this._geminiLiveModel}
                                 @change=${e => this._saveGeminiLiveModel(e.target.value)}
                             >
-                                <option value="gemini-2.0-flash-exp" ?selected=${this._geminiLiveModel === 'gemini-2.0-flash-exp'}>gemini-2.0-flash-exp (Fastest · Recommended)</option>
-                                <option value="gemini-2.0-flash-realtime-exp" ?selected=${this._geminiLiveModel === 'gemini-2.0-flash-realtime-exp'}>gemini-2.0-flash-realtime-exp (Realtime Audio)</option>
-                                <option value="gemini-3.1-flash-live-preview" ?selected=${this._geminiLiveModel === 'gemini-3.1-flash-live-preview'}>gemini-3.1-flash-live-preview (Latest Preview)</option>
-                                ${!['gemini-2.0-flash-exp', 'gemini-2.0-flash-realtime-exp', 'gemini-3.1-flash-live-preview'].includes(this._geminiLiveModel) && this._geminiLiveModel
+                                <option value="gemini-3.1-flash-live-preview" ?selected=${this._geminiLiveModel === 'gemini-3.1-flash-live-preview'}>gemini-3.1-flash-live-preview (Active · Verified Working)</option>
+                                ${this._geminiLiveModel && this._geminiLiveModel !== 'gemini-3.1-flash-live-preview' && this._geminiLiveModel !== 'gemini-2.0-flash-exp' && this._geminiLiveModel !== 'gemini-2.0-flash-realtime-exp'
                                     ? html`<option value="${this._geminiLiveModel}" selected>${this._geminiLiveModel}</option>`
                                     : ''}
                             </select>
