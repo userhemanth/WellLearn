@@ -377,6 +377,157 @@ export class WellLearnApp extends LitElement {
             z-index: 1;
         }
 
+        /* Listening / Mute Interviewer Toggle Button */
+        .listen-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px 2px 4px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-app-region: no-drag;
+            user-select: none;
+        }
+
+        .listen-toggle-btn.listening {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+        }
+
+        .listen-toggle-btn.listening:hover {
+            background: rgba(34, 197, 94, 0.22);
+            border-color: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .listen-toggle-btn.muted {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        .listen-toggle-btn.muted:hover {
+            background: rgba(239, 68, 68, 0.22);
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .listen-icon-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .listen-icon-circle.green {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1.5px solid #16a34a;
+        }
+
+        .listen-icon-circle.red {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1.5px solid #ef4444;
+        }
+
+        .listen-toggle-label {
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .listen-key-badge {
+            background: rgba(255, 255, 255, 0.09);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-family: var(--font-mono, monospace);
+            letter-spacing: 0.02em;
+            opacity: 0.85;
+        }
+
+        /* Click-Through Toggle Button (Keyboard Normal = Green, Keyboard Wrong/Slashed = Red) */
+        .clickthru-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px 2px 4px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-app-region: no-drag;
+            user-select: none;
+        }
+
+        .clickthru-toggle-btn.normal {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+        }
+
+        .clickthru-toggle-btn.normal:hover {
+            background: rgba(34, 197, 94, 0.22);
+            border-color: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .clickthru-toggle-btn.clickthrough {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        .clickthru-toggle-btn.clickthrough:hover {
+            background: rgba(239, 68, 68, 0.22);
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .clickthru-icon-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .clickthru-icon-circle.green {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1.5px solid #16a34a;
+        }
+
+        .clickthru-icon-circle.red {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1.5px solid #ef4444;
+        }
+
+        .clickthru-toggle-label {
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .clickthru-key-badge {
+            background: rgba(255, 255, 255, 0.09);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-family: var(--font-mono, monospace);
+            letter-spacing: 0.02em;
+            opacity: 0.85;
+        }
+
         .live-bar-text {
             font-size: var(--font-size-xs);
             color: var(--text-muted);
@@ -454,6 +605,7 @@ export class WellLearnApp extends LitElement {
         _updateAvailable: { state: true },
         _whisperDownloading: { state: true },
         _isCompact: { state: true },
+        _isListening: { state: true },
     };
 
     constructor() {
@@ -464,6 +616,7 @@ export class WellLearnApp extends LitElement {
         this.isRecording = false;
         this.sessionActive = false;
         this._isCompact = false;
+        this._isListening = true;
         this.selectedProfile = 'interview';
         this.selectedLanguage = 'en-US';
         this.selectedScreenshotInterval = '5';
@@ -549,6 +702,16 @@ export class WellLearnApp extends LitElement {
                     }
                     return;
                 }
+                if (key === 'l') {
+                    e.preventDefault();
+                    this.handleToggleListening();
+                    return;
+                }
+                if (key === 'm') {
+                    e.preventDefault();
+                    this.handleToggleClickThrough();
+                    return;
+                }
             }
         };
         window.addEventListener('keydown', this._handleGlobalKeyDown);
@@ -560,6 +723,7 @@ export class WellLearnApp extends LitElement {
             ipcRenderer.on('update-status', (_, status) => this.setStatus(status));
             ipcRenderer.on('click-through-toggled', (_, isEnabled) => {
                 this._isClickThrough = isEnabled;
+                this.requestUpdate();
             });
             ipcRenderer.on('reconnect-failed', (_, data) => this.addNewResponse(data.message));
             ipcRenderer.on('whisper-downloading', (_, downloading) => {
@@ -658,6 +822,32 @@ export class WellLearnApp extends LitElement {
         } else {
             this.navigate('main');
         }
+    }
+
+    handleToggleListening() {
+        this._isListening = !this._isListening;
+        if (typeof wellLearn !== 'undefined' && typeof wellLearn.setAudioListeningMuted === 'function') {
+            wellLearn.setAudioListeningMuted(!this._isListening);
+        }
+        this.requestUpdate();
+    }
+
+    async handleToggleClickThrough() {
+        if (window.require) {
+            try {
+                const { ipcRenderer } = window.require('electron');
+                const res = await ipcRenderer.invoke('toggle-click-through');
+                if (res && typeof res.isClickThrough === 'boolean') {
+                    this._isClickThrough = res.isClickThrough;
+                    this.requestUpdate();
+                    return;
+                }
+            } catch (err) {
+                console.error('Error invoking toggle-click-through:', err);
+            }
+        }
+        this._isClickThrough = !this._isClickThrough;
+        this.requestUpdate();
     }
 
     async handleClose() {
@@ -986,9 +1176,74 @@ export class WellLearnApp extends LitElement {
                 </div>
                 <div class="live-bar-center">${profileLabels[this.selectedProfile] || 'Session'}</div>
                 <div class="live-bar-right">
+                    <!-- Listening Toggle Badge (Green for listening, Red for muted) -->
+                    <button
+                        class="listen-toggle-btn ${this._isListening ? 'listening' : 'muted'}"
+                        @click=${() => this.handleToggleListening()}
+                        title="${this._isListening ? 'Listening to Interviewer (Ctrl+L) · Click to mute' : 'Muted - Not Listening (Ctrl+L) · Click to listen'}"
+                    >
+                        <div class="listen-icon-circle ${this._isListening ? 'green' : 'red'}">
+                            ${this._isListening
+                                ? html`<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>`
+                                : html`<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="1" y1="1" x2="23" y2="23" stroke-width="2.5"></line>
+                                    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+                                    <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>`
+                            }
+                        </div>
+                        <span class="listen-toggle-label">${this._isListening ? 'Listening' : 'Muted'}</span>
+                        <span class="listen-key-badge">Ctrl+L</span>
+                    </button>
+
+                    <!-- Click-Through Mode Toggle Badge (Green for interactive, Red for pass-through/wrong keyboard) -->
+                    <button
+                        class="clickthru-toggle-btn ${this._isClickThrough ? 'clickthrough' : 'normal'}"
+                        @click=${() => this.handleToggleClickThrough()}
+                        title="${this._isClickThrough ? 'Click-Through Active (Ctrl+M) · Clicks pass through window · Click or Ctrl+M to interact' : 'Interactive Mode (Ctrl+M) · Clicks captured · Click or Ctrl+M to pass through'}"
+                    >
+                        <div class="clickthru-icon-circle ${this._isClickThrough ? 'red' : 'green'}">
+                            ${this._isClickThrough
+                                ? html`<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="3" y1="3" x2="21" y2="21" stroke-width="2.5"></line>
+                                    <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+                                    <line x1="6" y1="9" x2="6.01" y2="9"></line>
+                                    <line x1="10" y1="9" x2="10.01" y2="9"></line>
+                                    <line x1="14" y1="9" x2="14.01" y2="9"></line>
+                                    <line x1="18" y1="9" x2="18.01" y2="9"></line>
+                                    <line x1="6" y1="12" x2="6.01" y2="12"></line>
+                                    <line x1="10" y1="12" x2="10.01" y2="12"></line>
+                                    <line x1="14" y1="12" x2="14.01" y2="12"></line>
+                                    <line x1="18" y1="12" x2="18.01" y2="12"></line>
+                                    <line x1="8" y1="15" x2="16" y2="15"></line>
+                                </svg>`
+                                : html`<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+                                    <line x1="6" y1="9" x2="6.01" y2="9"></line>
+                                    <line x1="10" y1="9" x2="10.01" y2="9"></line>
+                                    <line x1="14" y1="9" x2="14.01" y2="9"></line>
+                                    <line x1="18" y1="9" x2="18.01" y2="9"></line>
+                                    <line x1="6" y1="12" x2="6.01" y2="12"></line>
+                                    <line x1="10" y1="12" x2="10.01" y2="12"></line>
+                                    <line x1="14" y1="12" x2="14.01" y2="12"></line>
+                                    <line x1="18" y1="12" x2="18.01" y2="12"></line>
+                                    <line x1="8" y1="15" x2="16" y2="15"></line>
+                                </svg>`
+                            }
+                        </div>
+                        <span class="clickthru-toggle-label">${this._isClickThrough ? 'Pass-thru' : 'Interactive'}</span>
+                        <span class="clickthru-key-badge">Ctrl+M</span>
+                    </button>
+
                     ${this.statusText ? html`<span class="live-bar-text">${this.statusText}</span>` : ''}
                     <span class="live-bar-text">${this.getElapsedTime()}</span>
-                    ${this._isClickThrough ? html`<span class="live-bar-text">[click through]</span>` : ''}
                     <div class="window-controls live-controls">
                         <button class="win-btn hide" @click=${() => this.handleHideToggle()} title="Hide (Ctrl+\)">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -225,19 +225,24 @@ export class CustomizeView extends LitElement {
 
     async _loadFromStorage() {
         try {
-            const [prefs, keybinds] = await Promise.all([wellLearn.storage.getPreferences(), wellLearn.storage.getKeybinds()]);
-            this.googleSearchEnabled = prefs.googleSearchEnabled ?? false;
-            this.backgroundTransparency = prefs.backgroundTransparency ?? 0.8;
-            this.fontSize = prefs.fontSize ?? 20;
-            this.audioMode = prefs.audioMode ?? 'speaker_only';
-            this.customPrompt = prefs.customPrompt ?? '';
-            this.theme = prefs.theme ?? 'dark';
-            if (keybinds) {
-                this.keybinds = { ...this.getDefaultKeybinds(), ...keybinds };
+            if (typeof wellLearn !== 'undefined' && wellLearn.storage) {
+                const [prefs, keybinds] = await Promise.all([
+                    wellLearn.storage.getPreferences().catch(() => ({})),
+                    wellLearn.storage.getKeybinds().catch(() => null),
+                ]);
+                this.googleSearchEnabled = prefs?.googleSearchEnabled ?? false;
+                this.backgroundTransparency = prefs?.backgroundTransparency ?? 0.8;
+                this.fontSize = prefs?.fontSize ?? 20;
+                this.audioMode = prefs?.audioMode ?? 'speaker_only';
+                this.customPrompt = prefs?.customPrompt ?? '';
+                this.theme = prefs?.theme ?? 'dark';
+                if (keybinds) {
+                    this.keybinds = { ...this.getDefaultKeybinds(), ...keybinds };
+                }
+                this.updateBackgroundAppearance();
+                this.updateFontSize();
+                this.requestUpdate();
             }
-            this.updateBackgroundAppearance();
-            this.updateFontSize();
-            this.requestUpdate();
         } catch (error) {
             console.error('Error loading settings:', error);
         }
@@ -290,10 +295,11 @@ export class CustomizeView extends LitElement {
     }
 
     getDefaultKeybinds() {
-        const isMac = wellLearn.isMacOS || navigator.platform.includes('Mac');
+        const isMac = (typeof wellLearn !== 'undefined' && wellLearn.isMacOS) || navigator.platform.includes('Mac');
         return {
             openInterview: isMac ? 'Cmd+O' : 'Ctrl+O',
             returnHome: isMac ? 'Cmd+H' : 'Ctrl+H',
+            toggleListening: isMac ? 'Cmd+L' : 'Ctrl+L',
             moveUp: isMac ? 'Alt+Up' : 'Ctrl+Up',
             moveDown: isMac ? 'Alt+Down' : 'Ctrl+Down',
             moveLeft: isMac ? 'Alt+Left' : 'Ctrl+Left',
@@ -312,6 +318,7 @@ export class CustomizeView extends LitElement {
         return [
             { key: 'openInterview', name: 'Open Interview / Start Session', description: 'Start session and enter interview mode (Ctrl+O)' },
             { key: 'returnHome', name: 'Return to Home', description: 'Exit interview and return to home page (Ctrl+H)' },
+            { key: 'toggleListening', name: 'Toggle Listening / Mute Interviewer', description: 'Mute or unmute listening to interviewer (Ctrl+L)' },
             { key: 'moveUp', name: 'Move Window Up', description: 'Move the app window up' },
             { key: 'moveDown', name: 'Move Window Down', description: 'Move the app window down' },
             { key: 'moveLeft', name: 'Move Window Left', description: 'Move the app window left' },

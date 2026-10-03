@@ -742,10 +742,12 @@ export class MainView extends LitElement {
 
     async _loadFromStorage() {
         try {
-            const config = await wellLearn.storage.getConfig();
-            this._geminiKey = (await wellLearn.storage.getApiKey().catch(() => '')) || '';
-            this._geminiLiveModel = config.geminiLiveModel || 'gemini-3.1-flash-live-preview';
-            this.requestUpdate();
+            if (typeof wellLearn !== 'undefined' && wellLearn.storage) {
+                const config = await wellLearn.storage.getConfig();
+                this._geminiKey = (await wellLearn.storage.getApiKey().catch(() => '')) || '';
+                this._geminiLiveModel = config?.geminiLiveModel || 'gemini-3.1-flash-live-preview';
+                this.requestUpdate();
+            }
         } catch (e) {
             console.error('Error loading MainView storage:', e);
         }
@@ -917,6 +919,8 @@ export class MainView extends LitElement {
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
         const shortcutKey = isMac ? 'Cmd+O' : 'Ctrl+O';
         const homeShortcut = isMac ? 'Cmd+H' : 'Ctrl+H';
+        const listenShortcut = isMac ? 'Cmd+L' : 'Ctrl+L';
+        const clickthruShortcut = isMac ? 'Cmd+M' : 'Ctrl+M';
 
         return html`
             <div class="tool-shortcuts-hint">
@@ -932,6 +936,23 @@ export class MainView extends LitElement {
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                     <span>${homeShortcut} Home</span>
+                </span>
+                <span class="tool-shortcut-item" title="Shortcut to mute / unmute interviewer listening">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    </svg>
+                    <span>${listenShortcut} Listen</span>
+                </span>
+                <span class="tool-shortcut-item" title="Shortcut to toggle click-through mode">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="6" y1="9" x2="6.01" y2="9"></line>
+                        <line x1="10" y1="9" x2="10.01" y2="9"></line>
+                        <line x1="14" y1="9" x2="14.01" y2="9"></line>
+                        <line x1="18" y1="9" x2="18.01" y2="9"></line>
+                    </svg>
+                    <span>${clickthruShortcut} Click-thru</span>
                 </span>
             </div>
             <button

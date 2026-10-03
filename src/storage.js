@@ -142,8 +142,45 @@ function resetConfigDir() {
     console.log('Config directory initialized with defaults');
 }
 
+// Migrate files from legacy cheating-daddy-config directory if present
+function migrateLegacyConfig() {
+    const platform = os.platform();
+    let legacyDir;
+    if (platform === 'win32') {
+        legacyDir = path.join(os.homedir(), 'AppData', 'Roaming', 'cheating-daddy-config');
+    } else if (platform === 'darwin') {
+        legacyDir = path.join(os.homedir(), 'Library', 'Application Support', 'cheating-daddy-config');
+    } else {
+        legacyDir = path.join(os.homedir(), '.config', 'cheating-daddy-config');
+    }
+
+    const currentDir = getConfigDir();
+    if (fs.existsSync(legacyDir)) {
+        try {
+            if (!fs.existsSync(currentDir)) {
+                fs.mkdirSync(currentDir, { recursive: true });
+            }
+            const items = fs.readdirSync(legacyDir);
+            for (const item of items) {
+                const src = path.join(legacyDir, item);
+                const dest = path.join(currentDir, item);
+                if (!fs.existsSync(dest)) {
+                    if (fs.statSync(src).isDirectory()) {
+                        fs.cpSync(src, dest, { recursive: true });
+                    } else {
+                        fs.copyFileSync(src, dest);
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('Could not migrate legacy config files:', err.message);
+        }
+    }
+}
+
 // Initialize storage - call this on app startup
 function initializeStorage() {
+    migrateLegacyConfig();
     if (needsReset()) {
         resetConfigDir();
     } else {

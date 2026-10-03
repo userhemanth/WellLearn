@@ -173,7 +173,19 @@ ipcRenderer.on('update-status', (event, status) => {
     wellLearn.setStatus(status);
 });
 
+let isAudioListeningMuted = false;
+
+function setAudioListeningMuted(muted) {
+    isAudioListeningMuted = !!muted;
+    console.log(`[Audio] Interviewer listening ${isAudioListeningMuted ? 'MUTED' : 'ACTIVE'}`);
+}
+
+function getAudioListeningMuted() {
+    return isAudioListeningMuted;
+}
+
 async function startCapture(screenshotIntervalSeconds = 5, imageQuality = 'medium') {
+    isAudioListeningMuted = false;
     // Store the image quality for manual screenshots
     currentImageQuality = imageQuality;
 
@@ -397,6 +409,11 @@ function setupAudioProcessing(systemStream, micStreamToMix) {
     const samplesPerChunk = SAMPLE_RATE * AUDIO_CHUNK_DURATION;
 
     audioProcessor.onaudioprocess = async e => {
+        if (isAudioListeningMuted) {
+            chunkBuffer = [];
+            return;
+        }
+
         const inputData = e.inputBuffer.getChannelData(0);
         for (let i = 0; i < inputData.length; i++) {
             chunkBuffer.push(inputData[i]);
@@ -762,21 +779,34 @@ ipcRenderer.on('clear-sensitive-data', async () => {
 
 // Handle shortcuts based on current view
 function handleShortcut(shortcutKey) {
-    const key = (shortcutKey || '').toLowerCase();
-    const currentView = wellLearn.getCurrentView();
+    try {
+        const key = (shortcutKey || '').toLowerCase();
+        const app = document.querySelector('welllearn-app');
+        const currentView = app?.currentView || (typeof wellLearn !== 'undefined' ? wellLearn.getCurrentView() : null);
 
-    if (key === 'ctrl+enter' || key === 'cmd+enter') {
-        if (currentView === 'main') {
-            wellLearn.element().handleStart();
-        } else {
-            captureManualScreenshot();
+        if (key === 'ctrl+enter' || key === 'cmd+enter') {
+            if (currentView === 'main') {
+                app?.handleStart?.();
+            } else {
+                captureManualScreenshot();
+            }
+        } else if (key === 'ctrl+o' || key === 'cmd+o') {
+            if (currentView !== 'assistant') {
+                app?.handleStart?.();
+            }
+        } else if (key === 'ctrl+h' || key === 'cmd+h') {
+            app?.handleReturnHome?.();
+        } else if (key === 'ctrl+l' || key === 'cmd+l') {
+            if (app && typeof app.handleToggleListening === 'function') {
+                app.handleToggleListening();
+            }
+        } else if (key === 'ctrl+m' || key === 'cmd+m') {
+            if (app && typeof app.handleToggleClickThrough === 'function') {
+                app.handleToggleClickThrough();
+            }
         }
-    } else if (key === 'ctrl+o' || key === 'cmd+o') {
-        if (currentView !== 'assistant') {
-            wellLearn.element().handleStart();
-        }
-    } else if (key === 'ctrl+h' || key === 'cmd+h') {
-        wellLearn.element().handleReturnHome();
+    } catch (error) {
+        console.error('Error handling shortcut:', shortcutKey, error);
     }
 }
 
@@ -1067,17 +1097,17 @@ const wellLearn = {
     getVersion: async () => ipcRenderer.invoke('get-app-version'),
 
     // Element access
-    element: () => wellLearnApp,
-    e: () => wellLearnApp,
+    element: () => document.querySelector('welllearn-app'),
+    e: () => document.querySelector('welllearn-app'),
 
     // App state functions - access properties directly from the app element
-    getCurrentView: () => wellLearnApp.currentView,
-    getLayoutMode: () => wellLearnApp.layoutMode,
+    getCurrentView: () => document.querySelector('welllearn-app')?.currentView,
+    getLayoutMode: () => document.querySelector('welllearn-app')?.layoutMode,
 
     // Status and response functions
-    setStatus: text => wellLearnApp.setStatus(text),
-    addNewResponse: response => wellLearnApp.addNewResponse(response),
-    updateCurrentResponse: response => wellLearnApp.updateCurrentResponse(response),
+    setStatus: text => document.querySelector('welllearn-app')?.setStatus?.(text),
+    addNewResponse: response => document.querySelector('welllearn-app')?.addNewResponse?.(response),
+    updateCurrentResponse: response => document.querySelector('welllearn-app')?.updateCurrentResponse?.(response),
 
     // Core functionality
     initializeGemini,
@@ -1086,6 +1116,18 @@ const wellLearn = {
     stopCapture,
     sendTextMessage,
     handleShortcut,
+    setAudioListeningMuted,
+    getAudioListeningMuted,
+    toggleClickThrough: () => {
+        const app = document.querySelector('welllearn-app');
+        if (app && typeof app.handleToggleClickThrough === 'function') {
+            return app.handleToggleClickThrough();
+        }
+        if (window.require) {
+            const { ipcRenderer } = window.require('electron');
+            return ipcRenderer.invoke('toggle-click-through');
+        }
+    },
 
     // Storage API
     storage,
