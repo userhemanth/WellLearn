@@ -363,9 +363,25 @@ function setupWindowIpcHandlers(mainWindow, sendToRenderer, geminiSessionRef) {
             }
 
             if (!isLiveMode) {
+                mouseEventsIgnored = false;
                 mainWindow.setIgnoreMouseEvents(false);
+                mainWindow.webContents.send('click-through-toggled', false);
             }
         }
+    });
+
+    ipcMain.handle('toggle-click-through', () => {
+        if (!mainWindow || mainWindow.isDestroyed()) return { success: false, isClickThrough: false };
+        mouseEventsIgnored = !mouseEventsIgnored;
+        if (mouseEventsIgnored) {
+            mainWindow.setIgnoreMouseEvents(true, { forward: true });
+            console.log('Mouse events ignored (click-through ON)');
+        } else {
+            mainWindow.setIgnoreMouseEvents(false);
+            console.log('Mouse events restored (click-through OFF)');
+        }
+        mainWindow.webContents.send('click-through-toggled', mouseEventsIgnored);
+        return { success: true, isClickThrough: mouseEventsIgnored };
     });
 
     let isCompact = false;

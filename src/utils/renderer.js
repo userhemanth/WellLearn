@@ -800,6 +800,10 @@ function handleShortcut(shortcutKey) {
             if (app && typeof app.handleToggleListening === 'function') {
                 app.handleToggleListening();
             }
+        } else if (key === 'ctrl+m' || key === 'cmd+m') {
+            if (app && typeof app.handleToggleClickThrough === 'function') {
+                app.handleToggleClickThrough();
+            }
         }
     } catch (error) {
         console.error('Error handling shortcut:', shortcutKey, error);
@@ -1114,6 +1118,16 @@ const wellLearn = {
     handleShortcut,
     setAudioListeningMuted,
     getAudioListeningMuted,
+    toggleClickThrough: () => {
+        const app = document.querySelector('welllearn-app');
+        if (app && typeof app.handleToggleClickThrough === 'function') {
+            return app.handleToggleClickThrough();
+        }
+        if (window.require) {
+            const { ipcRenderer } = window.require('electron');
+            return ipcRenderer.invoke('toggle-click-through');
+        }
+    },
 
     // Storage API
     storage,
