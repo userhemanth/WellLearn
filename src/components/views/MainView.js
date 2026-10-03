@@ -1000,38 +1000,17 @@ export class MainView extends LitElement {
                 <div class="page-title">WellLearn</div>
                 <div class="page-subtitle">Powered by Google Gemini</div>
 
-                <div class="config-section">
-                    <div class="config-header">
-                        <span class="config-summary-title">Gemini Configuration</span>
-                        <span class="config-summary-description">Enter API key and select Live Model</span>
-                    </div>
-                    <div class="config-content">
-                        <div class="form-group">
-                            <label class="form-label">Gemini API Key</label>
-                            <input
-                                type="password"
-                                placeholder="Enter your Gemini API key"
-                                .value=${this._geminiKey}
-                                @input=${e => this._saveGeminiKey(e.target.value)}
-                                class=${this._keyError ? 'error' : ''}
-                            />
-                            <div class="form-hint">
-                                <span class="link" @click=${() => this.onExternalLink('https://aistudio.google.com/apikey')}>Get free Gemini API key</span>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Gemini Live Model</label>
-                            <select
-                                .value=${this._geminiLiveModel}
-                                @change=${e => this._saveGeminiLiveModel(e.target.value)}
-                            >
-                                <option value="gemini-3.1-flash-live-preview" ?selected=${this._geminiLiveModel === 'gemini-3.1-flash-live-preview'}>gemini-3.1-flash-live-preview (Active · Verified Working)</option>
-                                ${this._geminiLiveModel && this._geminiLiveModel !== 'gemini-3.1-flash-live-preview' && this._geminiLiveModel !== 'gemini-2.0-flash-exp' && this._geminiLiveModel !== 'gemini-2.0-flash-realtime-exp'
-                                    ? html`<option value="${this._geminiLiveModel}" selected>${this._geminiLiveModel}</option>`
-                                    : ''}
-                            </select>
-                        </div>
+                <div class="form-group">
+                    <label class="form-label">API Key</label>
+                    <input
+                        type="password"
+                        placeholder="Enter your API key"
+                        .value=${this._geminiKey}
+                        @input=${e => this._saveGeminiKey(e.target.value)}
+                        class=${this._keyError ? 'error' : ''}
+                    />
+                    <div class="form-hint">
+                        <span class="link" @click=${() => this.onExternalLink('https://aistudio.google.com/apikey')}>Get free Gemini API key</span>
                     </div>
                 </div>
 

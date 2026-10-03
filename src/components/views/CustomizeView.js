@@ -216,6 +216,7 @@ export class CustomizeView extends LitElement {
         this.audioMode = 'speaker_only';
         this.customPrompt = '';
         this.theme = 'dark';
+        this.geminiLiveModel = 'gemini-3.1-flash-live-preview';
         this._loadFromStorage();
     }
 
@@ -226,9 +227,10 @@ export class CustomizeView extends LitElement {
     async _loadFromStorage() {
         try {
             if (typeof wellLearn !== 'undefined' && wellLearn.storage) {
-                const [prefs, keybinds] = await Promise.all([
+                const [prefs, keybinds, config] = await Promise.all([
                     wellLearn.storage.getPreferences().catch(() => ({})),
                     wellLearn.storage.getKeybinds().catch(() => null),
+                    wellLearn.storage.getConfig().catch(() => ({})),
                 ]);
                 this.googleSearchEnabled = prefs?.googleSearchEnabled ?? false;
                 this.backgroundTransparency = prefs?.backgroundTransparency ?? 0.8;
@@ -236,6 +238,12 @@ export class CustomizeView extends LitElement {
                 this.audioMode = prefs?.audioMode ?? 'speaker_only';
                 this.customPrompt = prefs?.customPrompt ?? '';
                 this.theme = prefs?.theme ?? 'dark';
+                let model = config?.geminiLiveModel || 'gemini-3.1-flash-live-preview';
+                if (model === 'gemini-2.0-flash-exp' || model === 'gemini-2.0-flash-realtime-exp') {
+                    model = 'gemini-3.1-flash-live-preview';
+                    await wellLearn.storage.updateConfig('geminiLiveModel', model);
+                }
+                this.geminiLiveModel = model;
                 if (keybinds) {
                     this.keybinds = { ...this.getDefaultKeybinds(), ...keybinds };
                 }
@@ -578,6 +586,33 @@ export class CustomizeView extends LitElement {
         }
     }
 
+    async handleLiveModelSelect(e) {
+        this.geminiLiveModel = e.target.value;
+        if (typeof wellLearn !== 'undefined' && wellLearn.storage) {
+            await wellLearn.storage.updateConfig('geminiLiveModel', this.geminiLiveModel);
+        }
+        this.requestUpdate();
+    }
+
+    renderModelSection() {
+        return html`
+            <section class="surface">
+                <div class="surface-title">AI Model</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Live Model</label>
+                        <select class="control" .value=${this.geminiLiveModel} @change=${this.handleLiveModelSelect}>
+                            <option value="gemini-3.1-flash-live-preview" ?selected=${this.geminiLiveModel === 'gemini-3.1-flash-live-preview'}>gemini-3.1-flash-live-preview (Active · Verified Working)</option>
+                            ${this.geminiLiveModel && this.geminiLiveModel !== 'gemini-3.1-flash-live-preview' && this.geminiLiveModel !== 'gemini-2.0-flash-exp' && this.geminiLiveModel !== 'gemini-2.0-flash-realtime-exp'
+                                ? html`<option value="${this.geminiLiveModel}" selected>${this.geminiLiveModel}</option>`
+                                : ''}
+                        </select>
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
     renderAudioSection() {
         return html`
             <section class="surface">
@@ -715,6 +750,7 @@ export class CustomizeView extends LitElement {
             <div class="unified-page">
                 <div class="unified-wrap">
                     <div class="page-title">Settings</div>
+                    ${this.renderModelSection()}
                     ${this.renderAudioSection()}
                     ${this.renderLanguageSection()}
                     ${this.renderAppearanceSection()}
