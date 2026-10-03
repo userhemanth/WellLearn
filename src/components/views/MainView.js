@@ -164,12 +164,20 @@ export class MainView extends LitElement {
             transform: rotate(180deg);
         }
 
+        .config-header {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
         .config-content {
             display: flex;
             flex-direction: column;
             gap: var(--space-md);
             padding: 14px;
-            border-top: 1px solid var(--border);
         }
 
         .config-note {
@@ -987,35 +995,42 @@ export class MainView extends LitElement {
                 <div class="page-title">WellLearn</div>
                 <div class="page-subtitle">Powered by Google Gemini</div>
 
-                <details class="config-section" open>
-                    <summary class="config-summary">
-                        <span class="config-summary-text">
-                            <span class="config-summary-title">Gemini Configuration</span>
-                            <span class="config-summary-description">API Key and Live Model</span>
-                        </span>
-                        ${this._renderConfigChevron()}
-                    </summary>
+                <div class="config-section">
+                    <div class="config-header">
+                        <span class="config-summary-title">Gemini Configuration</span>
+                        <span class="config-summary-description">Enter API key and select Live Model</span>
+                    </div>
                     <div class="config-content">
                         <div class="form-group">
                             <label class="form-label">Gemini API Key</label>
                             <input
                                 type="password"
-                                placeholder="Required"
+                                placeholder="Enter your Gemini API key"
                                 .value=${this._geminiKey}
                                 @input=${e => this._saveGeminiKey(e.target.value)}
                                 class=${this._keyError ? 'error' : ''}
                             />
                             <div class="form-hint">
-                                <span class="link" @click=${() => this.onExternalLink('https://aistudio.google.com/apikey')}>Get Gemini key</span>
+                                <span class="link" @click=${() => this.onExternalLink('https://aistudio.google.com/apikey')}>Get free Gemini API key</span>
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Gemini Live Model</label>
-                            <input type="text" .value=${this._geminiLiveModel} @input=${e => this._saveGeminiLiveModel(e.target.value)} />
+                            <select
+                                .value=${this._geminiLiveModel}
+                                @change=${e => this._saveGeminiLiveModel(e.target.value)}
+                            >
+                                <option value="gemini-2.0-flash-exp" ?selected=${this._geminiLiveModel === 'gemini-2.0-flash-exp'}>gemini-2.0-flash-exp (Fastest · Recommended)</option>
+                                <option value="gemini-2.0-flash-realtime-exp" ?selected=${this._geminiLiveModel === 'gemini-2.0-flash-realtime-exp'}>gemini-2.0-flash-realtime-exp (Realtime Audio)</option>
+                                <option value="gemini-3.1-flash-live-preview" ?selected=${this._geminiLiveModel === 'gemini-3.1-flash-live-preview'}>gemini-3.1-flash-live-preview (Latest Preview)</option>
+                                ${!['gemini-2.0-flash-exp', 'gemini-2.0-flash-realtime-exp', 'gemini-3.1-flash-live-preview'].includes(this._geminiLiveModel) && this._geminiLiveModel
+                                    ? html`<option value="${this._geminiLiveModel}" selected>${this._geminiLiveModel}</option>`
+                                    : ''}
+                            </select>
                         </div>
                     </div>
-                </details>
+                </div>
 
                 ${this._renderStartButton()}
             </div>
